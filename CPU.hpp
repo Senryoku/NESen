@@ -2,6 +2,7 @@
 
 #include <cstring> // memset
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 
 #include "ROM.hpp"
@@ -52,8 +53,9 @@ public:
 	{
 		//_reg_pc = 0x34;
 		_reg_pc = read(0xFFFC) + (static_cast<addr_t>(read(0xFFFD)) << 8);
-		_reg_sp = 0xFD;
-		_reg_acc = _reg_x = _reg_y = _reg_ps = 0x00;
+		_reg_sp = 0xFD; /// @TODO: Check
+		_reg_ps = 0b00100000; /// @TODO: Check
+		_reg_acc = _reg_x = _reg_y = 0x00;
 		std::memset(_ram, 0xFF, RAMSize);
 	}
 	
@@ -61,23 +63,57 @@ public:
 	{
 		reset();
 		word_t opcode = 0x00;
+		
+		//////////////////
+		// TESTING
+		std::ifstream testfile("nestest_addr.log", std::ios::binary);
+		int expected_addr = 0;
+		unsigned int error_count = 0;
+		
 		_reg_pc = 0xC000; /// @todo TEMP! Remove!
+		
+		
+		
 		int inst_count = 0;
-		while(inst_count++ < 50)//!_shutdown)
+		while(inst_count++ < 8991)//!_shutdown)
 		{
-			std::cout << std::hex << _reg_pc << std::endl;
+			//std::cout << std::hex << _reg_pc << std::endl;
+			
+			///////////
+			// TESTING
+			char str[4];
+			testfile.getline(str, 6);
+			std::stringstream ss(str);
+			ss >> std::hex >> expected_addr;
+			
+			if(_reg_pc != expected_addr)
+			{
+				std::cerr << "ERROR! (" << std::dec << inst_count << "): Got " << std::hex << (int) _reg_pc << " expected " << std::hex << expected_addr << std::endl;
+				_reg_pc = expected_addr;
+				++error_count;
+				//if(error_count > 1)
+					return;
+			}
 			opcode = read(_reg_pc++);
+
 			execute(opcode);
 			// PPU interupt if needed
 			
-			std::cout << std::dec << inst_count << "\tA:" << std::hex << _reg_acc << " PS:" << std::hex << (int) _reg_ps << std::endl;
+			std::cout << std::dec << inst_count << 
+					" A:" << std::hex << (int) _reg_acc <<
+					" X:" << std::hex << (int) _reg_x << 
+					" Y:" << std::hex << (int) _reg_y <<
+					" PS:" << std::hex << (int) _reg_ps <<
+					" SP:" << std::hex << (int) _reg_sp << std::endl;
 		}
+		
+		std::cout << "Error Count : " << std::dec << error_count << std::endl;
 	}
 	
 	#define OP(C,O,A) case C: O(A()); log(#C " " #O " " #A); break;
-	#define OPM(C,O,A) case C: { auto tmp = A(); write(tmp, O(tmp)); _reg_pc++; log(#C " " #O " " #A); break; }
+	#define OPM(C,O,A) case C: { auto tmp = A(); write(tmp, O(tmp)); log(#C " " #O " " #A); break; }
 	#define OP_(C,O) case C: O(); log(#C " " #O " Implied"); break;
-	#define OPM_(C,O) case C: _reg_acc = O(_reg_acc); log(#C " " #O " Implied"); break;
+	#define OPA(C,O) case C: _reg_acc = O(_reg_acc); log(#C " " #O " ACC"); break;
 	
 	inline void execute(word_t opcode)
 	{
@@ -108,7 +144,7 @@ public:
 			OP(0x35, and_, addr_zeroX);
 			
 			// ASL
-			OPM_(0x0A, asl);
+			OPA(0x0A, asl);
 			OPM(0x06, asl, addr_zero);
 			OPM(0x16, asl, addr_zeroX);
 			
@@ -198,7 +234,7 @@ public:
 			OP(0xA4, ldy, addr_zero);
 			OP(0xB4, ldy, addr_zeroX);
 			
-			OPM_(0x4A, lsr);
+			OPA(0x4A, lsr);
 			OPM(0x4E, lsr, addr_abs);
 			OPM(0x5E, lsr, addr_absX);
 			OPM(0x46, lsr, addr_zero);
@@ -220,12 +256,12 @@ public:
 			OP_(0x68, pla);
 			OP_(0x28, plp);
 			
-			OPM_(0x2A, rol);
+			OPA(0x2A, rol);
 			OPM(0x2E, rol, addr_abs);
 			OPM(0x26, rol, addr_zero);
 			OPM(0x36, rol, addr_zeroX);
 			
-			OPM_(0x6A, ror);
+			OPA(0x6A, ror);
 			OPM(0x6E, ror, addr_abs);
 			OPM(0x7E, ror, addr_absX);
 			OPM(0x66, ror, addr_zero);
@@ -327,6 +363,7 @@ public:
 	{
 		auto r = read(_reg_pc) + static_cast<addr_t>(read(_reg_pc + 1) << 8);
 		++_reg_pc;
+		++_reg_pc;
 		return r;
 	}
 	
@@ -376,8 +413,8 @@ public:
 	
 	inline addr_t addr_indirectX()
 	{
-		auto r = static_cast<addr_t>(read((_reg_pc + _reg_x) & 0xFF)) |
-					(static_cast<addr_t>(read((_reg_pc + _reg_x + 1) & 0xFF)) << 8);
+		auto r = (static_cast<addr_t>(read(_reg_pc + _reg_x)) & 0xFF) |
+					((static_cast<addr_t>(read(_reg_pc + _reg_x + 1) & 0xFF)) << 8);
 		++_reg_pc;
 		++_reg_pc;
 		return r;
@@ -402,7 +439,7 @@ public:
 	
 	word_t pop()
 	{
-		return _ram[0100 + ++_reg_sp];
+		return _ram[0x100 + ++_reg_sp];
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -443,15 +480,19 @@ public:
 	/// Clears the Negative Flag if the operand is $#00-7F, otherwise sets it.
 	inline void set_neg(word_t operand)
 	{
-		_reg_ps = (_reg_ps & ~StateMask::Negative); // Clear Negative flag
-		_reg_ps = _reg_ps | (StateMask::Negative & (operand < 0));
+		//_reg_ps = (_reg_ps & ~StateMask::Negative); // Clear Negative flag
+		//_reg_ps = _reg_ps | ((operand & 0b10000000) ? StateMask::Negative : 0x0);
+		_reg_ps = (operand & 0b10000000) ?
+					_reg_ps | StateMask::Negative : // Set Negative flag
+					_reg_ps & ~StateMask::Negative; // Clear Negative flag
 	}
 	
 	/// Sets the Zero Flag if the operand is $#00, otherwise clears it.
 	inline void set_zero(word_t operand)
 	{
-		_reg_ps = (_reg_ps & ~StateMask::Zero); // Clear Zero flag
-		_reg_ps = _reg_ps | ((operand == 0) ? StateMask::Zero : 0x0);
+		_reg_ps = (operand == 0) ?
+					_reg_ps | StateMask::Zero : // Set Zero flag
+					_reg_ps & ~StateMask::Zero; // Clear Zero flag
 	}
 	
 	inline void set_neg_zero(word_t operand)
@@ -469,22 +510,17 @@ public:
 	inline void adc(addr_t addr)
 	{
 		auto operand = read(addr);
-		uint16_t add = _reg_acc + operand + (check(StateMask::Carry)) ? 0xFF : 0;
-		if(add > 0xFF)
-			set(StateMask::Carry);
-		else
-			clear(StateMask::Carry);
+		int16_t add = _reg_acc + operand + (_reg_ps & StateMask::Carry);
+
+		set(StateMask::Carry, add > 0xFF);
 		
 		// Overflow is set if the sum of two inputs with the same sign 
 		// produce a result with a different sign.
 		// a ^ b	=> 1 if sign bits are differents
 		// & 0x80	=> Conserve only sign bit
-		if(((~(_reg_acc ^ operand) & (_reg_acc ^ add)) & 0x80) == 0x00)
-			clear(StateMask::Overflow);
-		else
-			set(StateMask::Overflow);
+		set(StateMask::Overflow, (~(_reg_acc ^ operand) & (_reg_acc ^ add)) & 0x80);
 		
-		_reg_acc = static_cast<word_t>(add);
+		_reg_acc = static_cast<word_t>(add & 0xFF);
 		
 		set_neg_zero(_reg_acc);
 	}
@@ -495,14 +531,17 @@ public:
 		_reg_acc &= read(addr);
 		set_neg_zero(_reg_acc);
 	}
-	
+
 	inline word_t asl(addr_t addr)
 	{
-		auto operand = read(addr);
+		return asl(read(addr));
+	}
+	
+	inline word_t asl(word_t operand)
+	{
 		set(StateMask::Carry, operand & 0b10000000);
 		operand = operand << 1;
-		set(StateMask::Negative, operand & 0b10000000);
-		set(StateMask::Zero, operand & 0b10000000);
+		set_neg_zero(operand);
 		return operand;
 	}
 	
@@ -530,9 +569,10 @@ public:
 	
 	inline void bit(addr_t addr)
 	{
-		word_t tmp = 0b11000000 & (_reg_acc & read(addr));
-		_reg_ps |= tmp;
-		set(StateMask::Zero, (tmp == 0));
+		word_t tmp = (_reg_acc & read(addr));
+		set(StateMask::Negative, tmp & StateMask::Negative);
+		set(StateMask::Overflow, read(addr) & StateMask::Overflow);
+		set(StateMask::Zero, tmp == 0);
 	}
 	
 	inline void bmi()
@@ -660,9 +700,8 @@ public:
 	
 	inline void jsr(addr_t addr)
 	{
-		auto tmp = _reg_pc - 1;
-		push(tmp & 0xFF);
-		push((tmp >> 8) & 0xFF);
+		push(((_reg_pc - 1) >> 8) & 0xFF);
+		push((_reg_pc - 1) & 0xFF);
 		_reg_pc = addr;
 	}
 	
@@ -689,10 +728,14 @@ public:
 	
 	inline word_t lsr(addr_t addr)
 	{
-		word_t operand = read(addr);
+		return lsr(read(addr));
+	}
+	
+	inline word_t lsr(word_t operand)
+	{
 		clear(StateMask::Negative);
 		set(StateMask::Carry, operand & 0b00000001);
-		operand = (operand >> 1) & 0x7F;
+		operand = (operand >> 1) & 0b01111111;
 		set(StateMask::Zero, operand == 0);
 		return operand;
 	}
@@ -726,13 +769,17 @@ public:
 	inline void plp()
 	{
 		_reg_ps = pop();
-		set_neg_zero(_reg_ps);
 	}
 	
 	inline word_t rol(addr_t addr)
 	{
-		word_t operand = read(addr);
-		auto t = operand | 0b10000000;
+		return rol(read(addr));
+	}
+	
+	inline word_t rol(word_t operand)
+	{
+		word_t t = operand & 0b10000000;
+		std::cout << std::hex << (int) t << std::endl;
 		operand = (operand << 1) & 0xFE;
 		operand = operand | (check(StateMask::Carry) ? StateMask::Carry : 0);
 		set(StateMask::Carry, t != 0);
@@ -742,8 +789,12 @@ public:
 	
 	inline word_t ror(addr_t addr)
 	{
-		word_t operand = read(addr);
-		auto t = operand | 0b00000001;
+		return ror(read(addr));
+	}
+	
+	inline word_t ror(word_t operand)
+	{
+		word_t t = operand & 0b00000001;
 		operand = (operand >> 1) & 0x7F;
 		operand = operand | (check(StateMask::Carry) ? 0x80 : 0);
 		set(StateMask::Carry, t != 0);
@@ -753,37 +804,35 @@ public:
 	
 	inline void rti()
 	{
-		error("RTI not implemented yet");
+		_reg_ps = pop();
+		addr_t l = pop();
+		addr_t h = pop();
+		_reg_pc = (h << 8) | l;
 	}
 	
 	inline void rts()
 	{
 		addr_t l = pop();
 		addr_t h = pop();
-		_reg_pc = (h << 8) + l + 1;
+		_reg_pc = ((h << 8) | l) + 1;
 	}
 	
 	inline void sbc(addr_t addr)
 	{
+		adc(~read(addr));
+		/*
 		word_t operand = read(addr);
-		uint16_t add = _reg_acc - operand - (!check(StateMask::Carry)) ? 0xFF : 0;
-		if(add > 0xFF)
-			set(StateMask::Carry);
-		else
-			clear(StateMask::Carry);
+		std::cout << "SBC Operand " << std::hex << (int) operand << std::endl;
+		int16_t add = _reg_acc - operand - (StateMask::Carry & ~_reg_ps);
+		std::cout << "SBC add " << std::hex << (int) add << std::endl;
 		
-		// Overflow is set if the sum of two inputs with the same sign 
-		// produce a result with a different sign.
-		// a ^ b	=> 1 if sign bits are differents
-		// & 0x80	=> Conserve only sign bit
-		if(((~(_reg_acc ^ operand) & (_reg_acc ^ add)) & 0x80) == 0x00)
-			clear(StateMask::Overflow);
-		else
-			set(StateMask::Overflow);
+		set(StateMask::Carry, add >= 0x00);
+		set(StateMask::Overflow, add > 127 || add < -128);
 		
-		_reg_acc = static_cast<word_t>(add);
+		_reg_acc = static_cast<word_t>(add & 0xFF);
 		
 		set_neg_zero(_reg_acc);
+		*/
 	}
 	
 	inline void sec()
@@ -803,17 +852,17 @@ public:
 	
 	inline void sta(addr_t addr)
 	{
-		write(read(addr), _reg_acc);
+		write(addr, _reg_acc);
 	}
 	
 	inline void stx(addr_t addr)
 	{
-		write(read(addr), _reg_x);
+		write(addr, _reg_x);
 	}
 	
 	inline void sty(addr_t addr)
 	{
-		write(read(addr), _reg_y);
+		write(addr, _reg_y);
 	}
 	
 	inline void tax()
@@ -842,7 +891,6 @@ public:
 	
 	inline void txs()
 	{
-		set_neg_zero(_reg_x);
 		_reg_sp = _reg_x;
 	}
 	
