@@ -12,7 +12,7 @@
  * NES Central Processing Unit
  *
  * 8bits CPU
- * 2A03 (kind of 6502)
+ * Ricoh 2A03 (kind of 6502)
  * Little-Endian
  *
  * @see http://nesdev.com/nesdoc1.txt
@@ -88,10 +88,11 @@ public:
 			
 			if(_reg_pc != expected_addr)
 			{
-				std::cerr << "ERROR! (" << std::dec << inst_count << "): Got " << std::hex << (int) _reg_pc << " expected " << std::hex << expected_addr << std::endl;
+				std::cerr << " =================== ERROR! (" << 
+					std::dec << inst_count << "): Got " << std::hex << (int) _reg_pc << " expected " << std::hex << expected_addr << std::endl;
 				_reg_pc = expected_addr;
 				++error_count;
-				//if(error_count > 1)
+				if(error_count > 1)
 					return;
 			}
 			opcode = read(_reg_pc++);
@@ -147,6 +148,8 @@ public:
 			OPA(0x0A, asl);
 			OPM(0x06, asl, addr_zero);
 			OPM(0x16, asl, addr_zeroX);
+			OPM(0x0E, asl, addr_abs);
+			OPM(0x1E, asl, addr_absX);
 			
 			OP_(0x90, bcc);
 			OP_(0xB0, bcs);
@@ -226,7 +229,7 @@ public:
 			OP(0xA2, ldx, addr_immediate);
 			OP(0xBE, ldx, addr_absY);
 			OP(0xA6, ldx, addr_zero);
-			OP(0xB6, ldx, addr_zeroX);
+			OP(0xB6, ldx, addr_zeroY);
 			
 			OP(0xAC, ldy, addr_abs);
 			OP(0xBC, ldy, addr_absX);
@@ -238,6 +241,7 @@ public:
 			OPM(0x4E, lsr, addr_abs);
 			OPM(0x5E, lsr, addr_absX);
 			OPM(0x46, lsr, addr_zero);
+			OPM(0x56, lsr, addr_zeroX);
 			
 			OP_(0xEA, nop);
 			
@@ -369,64 +373,71 @@ public:
 	
 	inline addr_t addr_absX()
 	{
-		auto r = read(_reg_pc) + _reg_x;
+		addr_t r = read(_reg_pc) + (read((_reg_pc + 1) & 0xFFFF) << 8) + _reg_x;
+		++_reg_pc;
 		++_reg_pc;
 		return r;
 	}
 	
 	inline addr_t addr_absY()
 	{
-		auto r = read(_reg_pc) + _reg_y;
+		addr_t r = read(_reg_pc) + (read((_reg_pc + 1) & 0xFFFF) << 8) + _reg_y;
+		++_reg_pc;
 		++_reg_pc;
 		return r;
 	}
 	
 	inline addr_t addr_zero()
 	{
-		auto r = read(_reg_pc) & 0xFF;
+		addr_t r = read(_reg_pc);
 		++_reg_pc;
 		return r;
 	}
 	
 	inline addr_t addr_zeroX()
 	{
-		auto r = (read(_reg_pc) + _reg_x) & 0xFF;
+		addr_t r = (read(_reg_pc) + _reg_x) & 0xFF;
 		++_reg_pc;
 		return r;
 	}
 	
 	inline addr_t addr_zeroY()
 	{
-		auto r = (read(_reg_pc) + _reg_y) & 0xFF;
+		addr_t r = (read(_reg_pc) + _reg_y) & 0xFF;
 		++_reg_pc;
 		return r;
 	}
 	
 	inline addr_t addr_indirect()
 	{
-		auto r = static_cast<addr_t>(read(_reg_pc)) | 
-					(static_cast<addr_t>(read(_reg_pc + 1)) << 8);
+		addr_t l = read(_reg_pc);
+		addr_t h = read((_reg_pc + 1) & 0xFFFF);
+		std::cout << " - - - -  - - - - - - - ADDR: " << std::hex << (int) h  << " " 
+		 << std::hex << (int) l  << " " 
+		  << std::hex << (int) (l | (h << 8))  << " " << std::endl;
 		++_reg_pc;
 		++_reg_pc;
-		return r;
+		addr_t tmp = (l | (h << 8));
+		std::cout << " - - - -  - - - - - - - - - -  ADDR2: " << std::hex << (int) read(tmp) << " " << (int) (read(tmp + 1) & 0xFF) << std::endl;
+		return read(tmp) + ((read(tmp + 1) & 0xFF) << 8);
 	}
 	
 	inline addr_t addr_indirectX()
 	{
-		auto r = (static_cast<addr_t>(read(_reg_pc + _reg_x)) & 0xFF) |
-					((static_cast<addr_t>(read(_reg_pc + _reg_x + 1) & 0xFF)) << 8);
+		addr_t tmp = read(_reg_pc);
+		addr_t l = read((_reg_x + tmp) & 0xFF);
+		addr_t h = read((_reg_x + tmp + 1) & 0xFF);
 		++_reg_pc;
-		++_reg_pc;
-		return r;
+		return (l | (h << 8));
 	}
 	
 	inline addr_t addr_indirectY()
 	{
-		auto r = ((static_cast<addr_t>(read((_reg_pc) & 0xFF)) |
-					(static_cast<addr_t>(read((_reg_pc + 1) & 0xFF)) << 8)) + _reg_y) & 0xFFFF;
+		addr_t tmp = read(_reg_pc);
+		addr_t l = read(tmp);
+		addr_t h = read((tmp + 1) & 0xFF);
 		++_reg_pc;
-		++_reg_pc;
-		return r;
+		return ((l | (h << 8)) + _reg_y) & 0xFFFF;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -480,19 +491,13 @@ public:
 	/// Clears the Negative Flag if the operand is $#00-7F, otherwise sets it.
 	inline void set_neg(word_t operand)
 	{
-		//_reg_ps = (_reg_ps & ~StateMask::Negative); // Clear Negative flag
-		//_reg_ps = _reg_ps | ((operand & 0b10000000) ? StateMask::Negative : 0x0);
-		_reg_ps = (operand & 0b10000000) ?
-					_reg_ps | StateMask::Negative : // Set Negative flag
-					_reg_ps & ~StateMask::Negative; // Clear Negative flag
+		set(StateMask::Negative, operand & 0b10000000);
 	}
 	
 	/// Sets the Zero Flag if the operand is $#00, otherwise clears it.
 	inline void set_zero(word_t operand)
 	{
-		_reg_ps = (operand == 0) ?
-					_reg_ps | StateMask::Zero : // Set Zero flag
-					_reg_ps & ~StateMask::Zero; // Clear Zero flag
+		set(StateMask::Zero, operand == 0);
 	}
 	
 	inline void set_neg_zero(word_t operand)
@@ -509,8 +514,12 @@ public:
 	
 	inline void adc(addr_t addr)
 	{
-		auto operand = read(addr);
-		int16_t add = _reg_acc + operand + (_reg_ps & StateMask::Carry);
+		_adc(read(addr));
+	}
+	
+	inline void _adc(word_t operand)
+	{
+		const uint16_t add = _reg_acc + operand + (_reg_ps & StateMask::Carry);
 
 		set(StateMask::Carry, add > 0xFF);
 		
@@ -524,7 +533,6 @@ public:
 		
 		set_neg_zero(_reg_acc);
 	}
-	
 	
 	inline void and_(addr_t addr)
 	{
@@ -570,7 +578,7 @@ public:
 	inline void bit(addr_t addr)
 	{
 		word_t tmp = (_reg_acc & read(addr));
-		set(StateMask::Negative, tmp & StateMask::Negative);
+		set(StateMask::Negative, read(addr) & StateMask::Negative);
 		set(StateMask::Overflow, read(addr) & StateMask::Overflow);
 		set(StateMask::Zero, tmp == 0);
 	}
@@ -819,20 +827,7 @@ public:
 	
 	inline void sbc(addr_t addr)
 	{
-		adc(~read(addr));
-		/*
-		word_t operand = read(addr);
-		std::cout << "SBC Operand " << std::hex << (int) operand << std::endl;
-		int16_t add = _reg_acc - operand - (StateMask::Carry & ~_reg_ps);
-		std::cout << "SBC add " << std::hex << (int) add << std::endl;
-		
-		set(StateMask::Carry, add >= 0x00);
-		set(StateMask::Overflow, add > 127 || add < -128);
-		
-		_reg_acc = static_cast<word_t>(add & 0xFF);
-		
-		set_neg_zero(_reg_acc);
-		*/
+		_adc(static_cast<word_t>(~read(addr)));
 	}
 	
 	inline void sec()
