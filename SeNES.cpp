@@ -1,4 +1,4 @@
-#include "CPU.hpp"
+#include "NES.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -7,16 +7,13 @@ int main(int argc, char* argv[])
 	if(argc > 1)
 		path = argv[1];
 	
-	ROM rom;
-	if(!rom.load(path))
+	NES nes;
+	if(!nes.load(path))
 	{
 		std::cerr << "Error loading '" << path << "'. Exiting..." << std::endl;
 		return 0;
 	}
 	
-	PPU ppu;
-	CPU cpu;
-	cpu.rom = &rom;
-	cpu.ppu = &ppu;
-	cpu.run();
+	//nes.cpu.setTestLog("nestest_addr.log");
+	nes.run();
 }

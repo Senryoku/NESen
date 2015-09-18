@@ -4,9 +4,11 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <stdlib.h>
 
-#include "ROM.hpp"
 #include "PPU.hpp"
+#include "APU.hpp"
+#include "ROM.hpp"
 
 /**
  * NES Central Processing Unit
@@ -28,6 +30,7 @@ public:
 	
 	ROM*		rom;
 	PPU*		ppu;
+	APU*		apu;
 	
 	CPU() :
 		_ram(new word_t[RAMSize])
@@ -38,6 +41,11 @@ public:
 	{
 		delete _ram;
 	} 
+	
+	inline unsigned int getCycles() const
+	{
+		return _cycles;
+	}
 	
 	inline void log(const std::string& str)
 	{
@@ -51,70 +59,58 @@ public:
 	
 	void reset()
 	{
-		//_reg_pc = 0x34;
-		_reg_pc = read(0xFFFC) + (static_cast<addr_t>(read(0xFFFD)) << 8);
+		_reg_pc = read(0xFFFC) + ((static_cast<addr_t>(read(0xFFFD) & 0xFF) << 8));
+		//_reg_pc = 0xC000; /// @TODO Remove (here for nestest.nes)
 		_reg_sp = 0xFD; /// @TODO: Check
 		_reg_ps = 0b00100000; /// @TODO: Check
 		_reg_acc = _reg_x = _reg_y = 0x00;
 		std::memset(_ram, 0xFF, RAMSize);
 	}
 	
-	void run()
+	void setTestLog(const std::string& path)
 	{
-		reset();
-		word_t opcode = 0x00;
-		
-		//////////////////
-		// TESTING
-		std::ifstream testfile("nestest_addr.log", std::ios::binary);
-		int expected_addr = 0;
-		unsigned int error_count = 0;
-		
-		_reg_pc = 0xC000; /// @todo TEMP! Remove!
-		
-		
-		
-		int inst_count = 0;
-		while(inst_count++ < 8991)//!_shutdown)
-		{
-			//std::cout << std::hex << _reg_pc << std::endl;
+		_test_file.open(path, std::ios::binary);
+	}
+	
+	void step()
+	{
+		//std::cout << std::hex << _reg_pc << std::endl;
 			
-			///////////
-			// TESTING
+		///////////////
+		// TESTING
+		if(_test_file.is_open())
+		{
+			static int instr_count = 0;
+			static int error_count = 0;
+			instr_count++;
 			char str[4];
-			testfile.getline(str, 6);
+			_test_file.getline(str, 6);
 			std::stringstream ss(str);
+			int expected_addr = 0;
 			ss >> std::hex >> expected_addr;
 			
 			if(_reg_pc != expected_addr)
 			{
-				std::cerr << " =================== ERROR! (" << 
-					std::dec << inst_count << "): Got " << std::hex << (int) _reg_pc << " expected " << std::hex << expected_addr << std::endl;
+				std::cerr << instr_count << " ERROR! Got " << std::hex << (int) _reg_pc << " expected " << std::hex << expected_addr << std::endl;
+				std::cerr << " A:" << std::hex << (int) _reg_acc <<
+							" X:" << std::hex << (int) _reg_x << 
+							" Y:" << std::hex << (int) _reg_y <<
+							" PS:" << std::hex << (int) _reg_ps <<
+							" SP:" << std::hex << (int) _reg_sp << std::endl;
 				_reg_pc = expected_addr;
-				++error_count;
-				if(error_count > 1)
-					return;
-			}
-			opcode = read(_reg_pc++);
-
-			execute(opcode);
-			// PPU interupt if needed
-			
-			std::cout << std::dec << inst_count << 
-					" A:" << std::hex << (int) _reg_acc <<
-					" X:" << std::hex << (int) _reg_x << 
-					" Y:" << std::hex << (int) _reg_y <<
-					" PS:" << std::hex << (int) _reg_ps <<
-					" SP:" << std::hex << (int) _reg_sp << std::endl;
+				error_count++;
+				exit(1);
+			} //else std::cout << instr_count << " OK" << std::endl;
 		}
 		
-		std::cout << "Error Count : " << std::dec << error_count << std::endl;
+		word_t opcode = read(_reg_pc++);
+		execute(opcode);
 	}
 	
-	#define OP(C,O,A) case C: O(A()); log(#C " " #O " " #A); break;
-	#define OPM(C,O,A) case C: { auto tmp = A(); write(tmp, O(tmp)); log(#C " " #O " " #A); break; }
-	#define OP_(C,O) case C: O(); log(#C " " #O " Implied"); break;
-	#define OPA(C,O) case C: _reg_acc = O(_reg_acc); log(#C " " #O " ACC"); break;
+	#define OP(C,O,A) case C: O(A()); /*log(#C " " #O " " #A);*/ break;
+	#define OPM(C,O,A) case C: { auto tmp = A(); write(tmp, O(tmp)); /*log(#C " " #O " " #A);*/ break; }
+	#define OP_(C,O) case C: O(); /*log(#C " " #O " Implied");*/ break;
+	#define OPA(C,O) case C: _reg_acc = O(_reg_acc); /*log(#C " " #O " ACC");*/ break;
 	
 	inline void execute(word_t opcode)
 	{
@@ -159,6 +155,7 @@ public:
 			OP_(0x30, bmi);
 			OP_(0xD0, bne);
 			OP_(0x10, bpl);
+			OP_(0x00, brk);
 			OP_(0x50, bvc);
 			OP_(0x70, bvs);
 			OP_(0x18, clc);
@@ -215,6 +212,14 @@ public:
 			
 			OP(0x20, jsr, addr_abs); // Some source says Implied, another Absolute...
 			
+			// Unofficial
+			OP(0xAF, lax, addr_abs);
+			OP(0xBF, lax, addr_absY);
+			OP(0xA7, lax, addr_zero);
+			OP(0xB7, lax, addr_zeroY);
+			OP(0xA3, lax, addr_indirectX);
+			OP(0xB3, lax, addr_indirectY);
+			
 			// LDA  (Load Accumulator With Memory)
 			OP(0xA1, lda, addr_indirectX);
 			OP(0xB1, lda, addr_indirectY);
@@ -245,6 +250,31 @@ public:
 			
 			OP_(0xEA, nop);
 			
+			// Extension NOP
+			OP_(0x1A, nop);
+			OP_(0x3A, nop);
+			OP_(0x5A, nop);
+			OP_(0x7A, nop);
+			OP_(0xDA, nop);
+			OP_(0xFA, nop);
+			OP_(0x04, _reg_pc++; nop);
+			OP_(0x44, _reg_pc++; nop);
+			OP_(0x64, _reg_pc++; nop);
+			OP_(0x0C, _reg_pc+=2; nop);
+			OP_(0x14, _reg_pc++; nop);
+			OP_(0x34, _reg_pc++; nop);
+			OP_(0x54, _reg_pc++; nop);
+			OP_(0x74, _reg_pc++; nop);
+			OP_(0xD4, _reg_pc++; nop);
+			OP_(0xF4, _reg_pc++; nop);
+			OP_(0x80, _reg_pc++; nop);
+			OP_(0x1C, _reg_pc+=2; nop);
+			OP_(0x3C, _reg_pc+=2; nop);
+			OP_(0x5C, _reg_pc+=2; nop);
+			OP_(0x7C, _reg_pc+=2; nop);
+			OP_(0xDC, _reg_pc+=2; nop);
+			OP_(0xFC, _reg_pc+=2; nop);
+			
 			// ORA
 			OP(0x01, ora, addr_indirectX);
 			OP(0x11, ora, addr_indirectY);
@@ -260,8 +290,17 @@ public:
 			OP_(0x68, pla);
 			OP_(0x28, plp);
 			
+			OP(0x2F, rla, addr_abs);
+			OP(0x3F, rla, addr_absX);
+			OP(0x3B, rla, addr_absY);
+			OP(0x27, rla, addr_zero);
+			OP(0x37, rla, addr_zeroX);
+			OP(0x23, rla, addr_indirectX);
+			OP(0x33, rla, addr_indirectY);
+			
 			OPA(0x2A, rol);
 			OPM(0x2E, rol, addr_abs);
+			OPM(0x3E, rol, addr_absX);
 			OPM(0x26, rol, addr_zero);
 			OPM(0x36, rol, addr_zeroX);
 			
@@ -273,6 +312,10 @@ public:
 			
 			OP_(0x40, rti);
 			OP_(0x60, rts);
+			
+			// Unofficial
+			OP(0xCB, sax, addr_abs);
+			OP(0x83, sax, addr_indirectX);
 			
 			// SBC
 			OP(0xE1, sbc, addr_indirectX);
@@ -299,7 +342,7 @@ public:
 			
 			OP(0x8E, stx, addr_abs);
 			OP(0x86, stx, addr_zero);
-			OP(0x96, stx, addr_zeroX);
+			OP(0x96, stx, addr_zeroY);
 		
 			OP(0x8C, sty, addr_abs);
 			OP(0x84, sty, addr_zero);
@@ -312,10 +355,14 @@ public:
 			OP_(0x9A, txs);
 			OP_(0x98, tya);
 			
-			case 0x00: // BRK
 			default:
-				error("Unknown opcode...");
+			{
+				std::stringstream ss;
+				ss << "Unknown opcode: 0x" << std::hex << (int) opcode;
+				error(ss.str());
+				_reg_pc++; // Assuming at least one operand
 				break;
+			}
 		}
 	}
 	
@@ -329,11 +376,13 @@ public:
 		else if(addr < 0x2000) // RAM mirrors
 			return _ram[addr % RAMSize];
 		else if(addr < 0x2008) // PPU registers
-			return ppu->registers[addr - 0x2000];
+			return ppu->read(addr);
 		else if(addr < 0x4000) // PPU registers mirrors
-			return ppu->registers[(addr - 0x2000) % 8];
-		else if(addr < 0x4017) // pAPU / Controllers registers
-			return 0;
+			return ppu->read(addr);
+		else if(addr < 0x4018) // pAPU
+			return apu->read(addr);
+		else if(addr < 0x4020) // Controllers registers
+			return 0; /// @todo
 		else if(addr < 0x5000) // Unused
 			return 0;
 		else if(addr < 0x6000) // Expansion
@@ -352,6 +401,18 @@ public:
 			_ram[addr] = value;
 		else if(addr < 0x2000) // RAM mirrors
 			_ram[addr % RAMSize] = value;
+		else if(addr < 0x2008) // PPU registers
+			ppu->write(addr, value);
+		else if(addr < 0x4000) // PPU registers mirrors
+			ppu->write(addr % 0x08, value);
+		else if(addr < 0x4018) // pAPU / Controllers registers
+			apu->write(addr - 0x4000, value);
+		else if(addr < 0x4020) // Controllers registers
+			(void) 0; /// @todo
+		else {
+			std::cerr << "Error: Write addr 0x" << std::hex << addr << " out of bounds." << std::endl;
+			exit(1);
+		}
 	}
 	
 	// Addressing Modes
@@ -391,7 +452,7 @@ public:
 	{
 		addr_t r = read(_reg_pc);
 		++_reg_pc;
-		return r;
+		return r & 0xFF;
 	}
 	
 	inline addr_t addr_zeroX()
@@ -412,14 +473,14 @@ public:
 	{
 		addr_t l = read(_reg_pc);
 		addr_t h = read((_reg_pc + 1) & 0xFFFF);
-		std::cout << " - - - -  - - - - - - - ADDR: " << std::hex << (int) h  << " " 
-		 << std::hex << (int) l  << " " 
-		  << std::hex << (int) (l | (h << 8))  << " " << std::endl;
 		++_reg_pc;
 		++_reg_pc;
 		addr_t tmp = (l | (h << 8));
-		std::cout << " - - - -  - - - - - - - - - -  ADDR2: " << std::hex << (int) read(tmp) << " " << (int) (read(tmp + 1) & 0xFF) << std::endl;
-		return read(tmp) + ((read(tmp + 1) & 0xFF) << 8);
+		// This addressing mode is bugged on the actual hardware!
+		//                       Here! \/
+		return read(tmp) + ((read((((l + 1) & 0xFF) | (h << 8))) & 0xFF) << 8);
+		// 'Correct' version:
+		// return read(tmp) + ((read(tmp + 1) & 0xFF) << 8);
 	}
 	
 	inline addr_t addr_indirectX()
@@ -443,12 +504,12 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	// Stack
 	
-	void push(word_t value)
+	inline void push(word_t value)
 	{
 		_ram[0x100 + _reg_sp--] = value;
 	}
 	
-	word_t pop()
+	inline word_t pop()
 	{
 		return _ram[0x100 + ++_reg_sp];
 	}
@@ -556,7 +617,8 @@ public:
 	// Helper
 	inline void relative_jump(bool b)
 	{
-		b ? _reg_pc += read(_reg_pc++) :
+		word_t offset = read(_reg_pc);
+		b ? _reg_pc += offset + 1 - ((offset & 0b10000000) ? 0x100 : 0):
 			_reg_pc++;
 	}
 	
@@ -665,14 +727,12 @@ public:
 	
 	inline void dex()
 	{
-		--_reg_x;
-		set_neg_zero(_reg_x);
+		set_neg_zero(--_reg_x);
 	}
 	
 	inline void dey()
 	{
-		--_reg_y;
-		set_neg_zero(_reg_y);
+		set_neg_zero(--_reg_y);
 	}
 	
 	inline void eor(addr_t addr)
@@ -711,6 +771,14 @@ public:
 		push(((_reg_pc - 1) >> 8) & 0xFF);
 		push((_reg_pc - 1) & 0xFF);
 		_reg_pc = addr;
+	}
+	
+	inline void lax(addr_t addr)
+	{
+		word_t operand = read(addr);
+		set_neg_zero(operand);     
+		_reg_acc = operand;
+		_reg_x = operand;
 	}
 	
 	inline void lda(addr_t addr)
@@ -779,6 +847,17 @@ public:
 		_reg_ps = pop();
 	}
 	
+	inline void rla(addr_t addr)
+	{
+		rla(read(addr));
+	}
+	
+	inline void rla(word_t operand)
+	{
+		word_t tmp = rol(operand);
+		_reg_acc &= tmp;
+	}
+	
 	inline word_t rol(addr_t addr)
 	{
 		return rol(read(addr));
@@ -787,7 +866,6 @@ public:
 	inline word_t rol(word_t operand)
 	{
 		word_t t = operand & 0b10000000;
-		std::cout << std::hex << (int) t << std::endl;
 		operand = (operand << 1) & 0xFE;
 		operand = operand | (check(StateMask::Carry) ? StateMask::Carry : 0);
 		set(StateMask::Carry, t != 0);
@@ -823,6 +901,12 @@ public:
 		addr_t l = pop();
 		addr_t h = pop();
 		_reg_pc = ((h << 8) | l) + 1;
+	}
+	
+	inline void sax(addr_t addr)
+	{
+		/// @todo: check
+		_reg_x = (_reg_x & _reg_acc) + 1;
 	}
 	
 	inline void sbc(addr_t addr)
@@ -904,8 +988,12 @@ private:
 	word_t		_reg_sp		= 0x00;		///< Stack Pointer
 	word_t		_reg_ps		= 0x00;		///< Processor Status
 	
+	unsigned int	_cycles = 0;
+	
 	// Memory
 	word_t*		_ram;		///< RAM
 	
 	bool		_shutdown = false;
+	
+	std::ifstream	_test_file;
 };
