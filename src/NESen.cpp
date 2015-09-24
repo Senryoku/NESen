@@ -24,7 +24,7 @@ using Hexa8 = HexaGen<CPU::word_t>;
 
 int main(int argc, char* argv[])
 {
-	std::string path = "tests/nestest.nes";
+	std::string path = "tests/Ice Climber (USA, Europe).nes";
 	
 	if(argc > 1)
 		path = argv[1];
@@ -36,14 +36,16 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 	
-	nes.cpu.setTestLog("tests/nestest_addr.log");
+	// For nestest.nes, don't forget to set PC at C000.
+	//nes.cpu.set_test_log("tests/nestest_addr.log");
+	
 	nes.reset();
 	
 	float screen_scale = 2.0f;
 	
 	size_t padding = 200;
-	sf::RenderWindow window(sf::VideoMode(nes.ppu.ScreenWidth + padding + 600, 
-											nes.ppu.ScreenHeight + padding), 
+	sf::RenderWindow window(sf::VideoMode(screen_scale * nes.ppu.ScreenWidth + padding + 600, 
+											screen_scale * nes.ppu.ScreenHeight + padding), 
 											"NESen");
 	window.setVerticalSyncEnabled(false);
 	
@@ -52,9 +54,7 @@ int main(int argc, char* argv[])
 		std::cerr << "Error creating the screen texture!" << std::endl;
 	sf::Sprite nes_screen_sprite;
 	nes_screen_sprite.setTexture(nes_screen);
-	nes_screen_sprite.setPosition(
-		padding / 2 - (screen_scale - 1.0) * nes.ppu.ScreenWidth * 0.5, 
-		padding / 2 - (screen_scale - 1.0) * nes.ppu.ScreenHeight * 0.5);
+	nes_screen_sprite.setPosition(padding / 2, padding / 2);
 	nes_screen_sprite.setScale(screen_scale, screen_scale);
 	
 	sf::Texture	nes_tilemap;
@@ -62,8 +62,8 @@ int main(int argc, char* argv[])
 		std::cerr << "Error creating the vram texture!" << std::endl;
 	sf::Sprite nes_tilemap_sprite;
 	nes_tilemap_sprite.setTexture(nes_tilemap);
-	nes_tilemap_sprite.setPosition(600, 
-		padding / 2 - (screen_scale - 1.0) * nes.ppu.ScreenHeight * 0.5);
+	nes_tilemap_sprite.setPosition(screen_scale * nes.ppu.ScreenWidth + padding, 
+		padding / 2);
 	nes_tilemap_sprite.setScale(screen_scale, screen_scale);
 	// 2 * (256 tiles * (8 * 8) bits per tile)
 	size_t tile_map_size = 2 * 256 * 8 * 8;
@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 	sf::Text log_text;
 	log_text.setFont(font);
 	log_text.setCharacterSize(16);
-	log_text.setPosition(5, 450);
+	log_text.setPosition(5, 200 / 2 + 2 * nes.ppu.ScreenHeight);
 	log_text.setString("Log");
 	
 	//bool first_loop = true;
@@ -116,13 +116,14 @@ int main(int argc, char* argv[])
 				size_t tile_off = 8 * (t % 16) + (16 * 8 * 8) * (t / 16); 
 				for(int y = 0; y < 8; ++y)
 				{
-					tile_l = nes.ppu.readVRAM(t * 16 + y);
-					tile_h = nes.ppu.readVRAM(t * 16 + y + 8);
+					tile_l = nes.ppu.read(t * 16 + y);
+					tile_h = nes.ppu.read(t * 16 + y + 8);
 					PPU::palette_translation(tile_l, tile_h, tile_data0, tile_data1);
 					for(int x = 0; x < 8; ++x)
 					{
 						PPU::word_t shift = ((7 - x) % 4) * 2;
 						PPU::word_t color = ((x > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
+						/// @Todo: Palettes
 						tile_map[tile_off + 16 * 8 * y + x] = (4 - color) * (255/4.0);
 					}
 				}

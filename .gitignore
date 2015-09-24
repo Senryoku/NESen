@@ -47,3 +47,4 @@ CMakeCache.txt
 Makefile
 cmake_install.cmake
 ref/
+tests/

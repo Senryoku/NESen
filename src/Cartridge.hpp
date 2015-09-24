@@ -7,21 +7,22 @@
 /**
  * NES Cartridge
 **/
-class ROM
+class Cartridge
 {
 public:
 	using byte_t = char;
+	using addr_t = uint16_t;
 	
-	ROM()
+	Cartridge()
 	{
 	}
 	
-	ROM(const std::string& path)
+	Cartridge(const std::string& path)
 	{
 		load(path);
 	}
 	
-	~ROM()
+	~Cartridge()
 	{
 		delete _trainer;
 		delete _prg_rom;
@@ -69,16 +70,30 @@ public:
 		_prg_ram = new byte_t[_prg_ram_size];
 		
 		std::cout << "Loaded '" << path << "' successfully! " << std::endl << 
-					"> PRG ROM size: " << static_cast<size_t>(h[4]) << "kB (" << _prg_rom_size << "B)" << std::endl <<
-					"> CHR ROM size: " << static_cast<size_t>(h[5]) << "kB (" << _chr_rom_size << "B)" << std::endl <<
-					"> PRG RAM size: " << static_cast<size_t>(h[8]) << "kB (" << _prg_ram_size << "B)" << std::endl;
+					"> PRG Cartridge size: " << 16 * h[4] << "kB (" << _prg_rom_size << "B)" << std::endl <<
+					"> CHR Cartridge size: " << 8 * h[5] << "kB (" << _chr_rom_size << "B)" << std::endl <<
+					"> PRG RAM size: " << 8 * h[8] << "kB (" << _prg_ram_size << "B)" << std::endl;
 		
 		return true;
 	}
 	
-	byte_t read(uint16_t addr)
+	byte_t read(addr_t addr) const
 	{
-		return _prg_rom[addr % _prg_rom_size];
+		// Mapper 00
+		if(addr >= 0x6000 && addr < 0x8000)
+			return _prg_ram[(addr - 0x6000) % _prg_ram_size];
+		else if(addr >= 0x8000 && addr < 0xC000)
+			return _prg_rom[(addr - 0x8000) % _prg_rom_size];
+		else if(addr >= 0xC000)
+			return _prg_rom[(addr - 0xC000) % _prg_rom_size];
+			
+		std::cerr << "Error: Trying to read Cartridge at address 0x" << std::hex << addr << std::endl;
+		return _prg_rom[0];
+	}
+	
+	byte_t read_chr(addr_t addr)
+	{
+		return _chr_rom[addr % _chr_rom_size];
 	}
 
 private:

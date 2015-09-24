@@ -8,7 +8,7 @@ public:
 	CPU cpu;
 	APU apu;
 	PPU ppu;
-	ROM rom;
+	Cartridge cartridge;
 	
 	NES()
 	{
@@ -28,13 +28,14 @@ public:
 	void init()
 	{
 		cpu.ppu = &ppu;
-		cpu.rom = &rom;
+		cpu.cartridge = &cartridge;
 		cpu.apu = &apu;
+		ppu.cartridge = &cartridge;
 	}
 	
 	bool load(const std::string& path)
 	{
-		return rom.load(path);
+		return cartridge.load(path);
 	}
 	
 	void reset()
@@ -55,7 +56,7 @@ public:
 	void step()
 	{
 		cpu.step();
-		ppu.step(cpu.getCycles());
+		ppu.step(cpu.get_instr_cycles());
 	}
 	
 private:

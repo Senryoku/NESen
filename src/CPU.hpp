@@ -8,7 +8,7 @@
 
 #include "PPU.hpp"
 #include "APU.hpp"
-#include "ROM.hpp"
+#include "Cartridge.hpp"
 
 /**
  * NES Central Processing Unit
@@ -28,9 +28,9 @@ public:
 	static constexpr addr_t RAMSize = 0x0800;
 	static constexpr size_t ClockRate = 1789773; // Hz
 	
-	ROM*		rom;
-	PPU*		ppu;
-	APU*		apu;
+	Cartridge*		cartridge;
+	PPU*			ppu;
+	APU*			apu;
 	
 	CPU() :
 		_ram(new word_t[RAMSize])
@@ -47,6 +47,8 @@ public:
 		return _cycles;
 	}
 	
+	inline size_t get_instr_cycles() const { return 10; } /// @todo !
+	
 	inline void log(const std::string& str)
 	{
 		std::cout << str << std::endl;
@@ -59,15 +61,15 @@ public:
 	
 	void reset()
 	{
-		_reg_pc = read(0xFFFC) + ((static_cast<addr_t>(read(0xFFFD) & 0xFF) << 8));
+		_reg_pc = read(0xFFFC) | (read(0xFFFD) << 8);
 		//_reg_pc = 0xC000; /// @TODO Remove (here for nestest.nes)
 		_reg_sp = 0xFD; /// @TODO: Check
-		_reg_ps = 0b00100000; /// @TODO: Check
+		_reg_ps = 0x34; /// @TODO: Check
 		_reg_acc = _reg_x = _reg_y = 0x00;
 		std::memset(_ram, 0xFF, RAMSize);
 	}
 	
-	void setTestLog(const std::string& path)
+	void set_test_log(const std::string& path)
 	{
 		_test_file.open(path, std::ios::binary);
 	}
@@ -129,11 +131,11 @@ public:
 		else if(addr < 0x5000) // Unused
 			return 0;
 		else if(addr < 0x6000) // Expansion
-			return 0;
+			return cartridge->read(addr);
 		else if(addr < 0x8000) // SRAM
-			return 0;
-		else if(addr <= 0xFFFF) // ROM
-			return rom->read(addr - 0x8000);
+			return cartridge->read(addr);
+		else if(addr <= 0xFFFF) // Cartridge
+			return cartridge->read(addr);
 		else
 			return 0; // Error
 	}
@@ -146,6 +148,8 @@ public:
 			_ram[addr % RAMSize] = value;
 		else if(addr < 0x2008) // PPU registers
 			ppu->write(addr, value);
+		else if(addr == 0x4014) // OAMDMA
+			oam_dma(value);
 		else if(addr < 0x4000) // PPU registers mirrors
 			ppu->write(addr % 0x08, value);
 		else if(addr < 0x4018) // pAPU / Controllers registers
@@ -252,6 +256,15 @@ private:
 	bool		_shutdown = false;
 	
 	std::ifstream	_test_file;
+	
+	void oam_dma(word_t value)
+	{
+		// Takes 513 or 514 (if on an odd cycle) Cycles
+		ppu->write(0x2003, 0x00); // Reset OAMADDR
+		addr_t start = (value << 8);
+		for(addr_t a = 0; a < 256; ++a)
+			ppu->write(0x2004, _ram[start + a]);
+	}
 	
 	#include "CPUInstr.inl"
 	
