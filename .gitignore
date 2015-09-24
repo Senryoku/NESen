@@ -42,3 +42,8 @@ Network Trash Folder
 Temporary Items
 .apdisk
 *.nes
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+ref/

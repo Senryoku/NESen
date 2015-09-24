@@ -37,15 +37,25 @@ public:
 		return rom.load(path);
 	}
 	
-	void run()
+	void reset()
 	{
 		cpu.reset();
+		ppu.reset();
+	}
+	
+	void run()
+	{
+		reset();
 		while(!_shutdown)
 		{
-			cpu.step();
-			//while(cpu.getCycles() > ppu.getCycles() * _ppucpuRatio)
-				ppu.step();
+			step();
 		}
+	}
+	
+	void step()
+	{
+		cpu.step();
+		ppu.step(cpu.getCycles());
 	}
 	
 private:
