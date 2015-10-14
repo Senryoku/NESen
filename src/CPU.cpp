@@ -1,5 +1,8 @@
 #include "CPU.hpp"
 
+Log CPU::log = Log(&std::cout);
+Log CPU::error = Log(&std::cerr);
+	
 // @todo TODO
 size_t	CPU::instr_length[0x100] = {
 	1, 2, 0, 0, 0, 2, 2, 0, 1, 2, 1, 0, 0, 3, 3, 0, // 0
@@ -75,34 +78,35 @@ void CPU::step()
 		
 		if(_reg_pc != expected_addr)
 		{
-			std::cerr << instr_count << " ERROR! Got " << std::hex << (int) _reg_pc << " expected " << std::hex << expected_addr << std::endl;
-			std::cerr << " A:" << std::hex << (int) _reg_acc <<
-						" X:" << std::hex << (int) _reg_x << 
-						" Y:" << std::hex << (int) _reg_y <<
-						" PS:" << std::hex << (int) _reg_ps <<
-						" SP:" << std::hex << (int) _reg_sp << std::endl;
+			error << instr_count << " ERROR! Got " << Hexa(_reg_pc) << " expected " << Hexa(expected_addr) << std::endl;
+			error << " A:" << Hexa8(_reg_acc) <<
+						" X:" << Hexa8(_reg_x) << 
+						" Y:" << Hexa8(_reg_y) <<
+						" PS:" << Hexa(_reg_ps) <<
+						" SP:" << Hexa(_reg_sp) << std::endl;
 			_reg_pc = expected_addr;
 			error_count++;
 			exit(1);
-		} else std::cout << instr_count << " OK" << std::endl;
+		} else log << instr_count << " OK" << std::endl;
 	}
 	
 	
 	if(ppu->check_nmi())
 	{
+		push16(_reg_pc);
 		push(_reg_ps | 0b00100000);
-		push(_reg_pc);
-		_reg_pc = read(0xFFFA) | (read(0xFFFB) << 8);
+		_reg_pc = read16(0xFFFA);
+		log << "NMI caused a jump to " << Hexa(_reg_pc) << std::endl;
 	}
 	
 	word_t opcode = read(_reg_pc++);
 	execute(opcode);
 }
 
-#define OP(C,O,A) case C: O(A()); /*log(#C " " #O " " #A);*/ break;
-#define OPM(C,O,A) case C: { auto tmp = A(); write(tmp, O(tmp)); /*log(#C " " #O " " #A);*/ break; }
-#define OP_(C,O) case C: O(); /*log(#C " " #O " Implied");*/ break;
-#define OPA(C,O) case C: _reg_acc = O(_reg_acc); /*log(#C " " #O " ACC");*/ break;
+#define OP(C,O,A) case C: O(A()); /* log << Hexa(_reg_pc) << " " #C " " #O " " #A << std::endl; */ break;
+#define OPM(C,O,A) case C: { auto tmp = A(); write(tmp, O(tmp)); /* log << Hexa(_reg_pc) << " " #C " " #O " " #A << std::endl; */ break; }
+#define OP_(C,O) case C: O(); /* log << Hexa(_reg_pc) << " " #C " " #O " Implied" << std::endl; */ break;
+#define OPA(C,O) case C: _reg_acc = O(_reg_acc); /* log << Hexa(_reg_pc) << " " #C " " #O " ACC" << std::endl; */ break;
 
 void CPU::execute(word_t opcode)
 {
@@ -357,7 +361,7 @@ void CPU::execute(word_t opcode)
 		{
 			std::stringstream ss;
 			ss << "Unknown opcode: 0x" << std::hex << (int) opcode;
-			error(ss.str());
+			error << ss.str() << std::endl;
 			_reg_pc++; // Assuming at least one operand
 			break;
 		}

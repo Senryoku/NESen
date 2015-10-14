@@ -92,8 +92,11 @@ inline void bpl()
 
 inline void brk()
 {
-	//push(_reg_ps | 0b00110000);
-	error("BRK not implemented");
+	_reg_pc++;
+	push16(_reg_pc);
+	push(_reg_ps | 0b00110000);
+	_reg_pc = read16(0xFFFA);
+	log << "BRK caused a jump to " << Hexa(_reg_pc) << std::endl;
 }
 
 inline void bvc()
@@ -199,8 +202,7 @@ inline void jmp(addr_t addr)
 
 inline void jsr(addr_t addr)
 {
-	push(((_reg_pc - 1) >> 8) & 0xFF);
-	push((_reg_pc - 1) & 0xFF);
+	push16(_reg_pc - 1);
 	_reg_pc = addr;
 }
 
@@ -322,16 +324,12 @@ inline word_t ror(word_t operand)
 inline void rti()
 {
 	_reg_ps = pop() & 0b11001111;
-	addr_t l = pop();
-	addr_t h = pop();
-	_reg_pc = (h << 8) | l;
+	_reg_pc = pop16();
 }
 
 inline void rts()
 {
-	addr_t l = pop();
-	addr_t h = pop();
-	_reg_pc = ((h << 8) | l) + 1;
+	_reg_pc = pop16() + 1;
 }
 
 inline void sax(addr_t addr)

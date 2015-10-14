@@ -1,16 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // CPU Inline functions
 
-void CPU::log(const std::string& str)
-{
-	std::cout << str << std::endl;
-}
-
-void CPU::error(const std::string& str)
-{
-	std::cerr << str << std::endl;
-}
-
 word_t CPU::read(addr_t addr) const
 {
 	if(addr < RAMSize)
@@ -33,8 +23,15 @@ word_t CPU::read(addr_t addr) const
 		return cartridge->read(addr);
 	else if(addr <= 0xFFFF) // Cartridge
 		return cartridge->read(addr);
-	else
-		return 0; // Error
+	else {
+		error << "Error: Read addr " << Hexa(addr) << " out of bounds." << std::endl;
+		exit(1);
+	}
+}
+
+addr_t CPU::read16(addr_t addr) const
+{
+	return read(addr) | (read(addr + 1) << 8);
 }
 
 void CPU::write(addr_t addr, word_t value)
@@ -54,7 +51,7 @@ void CPU::write(addr_t addr, word_t value)
 	else if(addr < 0x4020) // Controllers registers
 		(void) 0; /// @todo
 	else {
-		std::cerr << "Error: Write addr 0x" << std::hex << addr << " out of bounds." << std::endl;
+		error << "Error: Write addr " << Hexa(addr) << " out of bounds." << std::endl;
 		exit(1);
 	}
 }
@@ -67,9 +64,22 @@ inline void CPU::push(word_t value)
 	_ram[0x100 + _reg_sp--] = value;
 }
 
+inline void CPU::push16(addr_t value)
+{
+	push((value & 0xFF00) >> 8);
+	push(value & 0xFF);
+}
+
 inline word_t CPU::pop()
 {
 	return _ram[0x100 + ++_reg_sp];
+}
+
+inline addr_t CPU::pop16()
+{
+	addr_t l = pop();
+	addr_t h = pop();
+	return (h << 8) | l;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

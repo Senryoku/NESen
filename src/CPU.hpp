@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <stdlib.h>
 
+#include "Log.hpp"
 #include "PPU.hpp"
 #include "APU.hpp"
 #include "Cartridge.hpp"
@@ -25,6 +26,9 @@ public:
 	static constexpr addr_t RAMSize = 0x0800;
 	static constexpr size_t ClockRate = 1789773; // Hz
 	
+	static Log log;
+	static Log error;
+	
 	Cartridge*		cartridge;
 	PPU*			ppu;
 	APU*			apu;
@@ -43,22 +47,22 @@ public:
 	
 	void set_test_log(const std::string& path);
 	
-	inline void log(const std::string& str);
-	inline void error(const std::string& str);
-	
 	void step();	
 	void execute(word_t opcode);
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	// Memory access
 	inline word_t read(addr_t addr) const;
+	inline addr_t read16(addr_t addr) const;
 	inline void write(addr_t addr, word_t value);
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	// Stack
 	inline void push(word_t value);
+	inline void push16(addr_t value);
 	inline word_t pop();
+	inline addr_t pop16();
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////

@@ -6,6 +6,9 @@
 
 #include "NES.hpp"
 
+bool debug = true;
+bool step = true;
+
 int main(int argc, char* argv[])
 {
 	std::string path = "tests/Ice Climber (USA, Europe).nes";
@@ -82,15 +85,21 @@ int main(int argc, char* argv[])
 				switch(event.key.code)
 				{
 					case sf::Keyboard::Escape: window.close(); break;
+					case sf::Keyboard::Return: debug = !debug; break;
+					case sf::Keyboard::Space: step = true; break;
 					default: break;
 				}
 			}
 		}
 		
-		do
+		if(!debug || step)
 		{
-			nes.step();
-		} while(!nes.ppu.completed_frame);
+			step = false;
+			do
+			{
+				nes.step();
+			} while(!debug && !nes.ppu.completed_frame);
+		}
 		
 		nes_screen.update(reinterpret_cast<const uint8_t*>(nes.ppu.get_screen()));
 		
@@ -128,7 +137,8 @@ int main(int argc, char* argv[])
 			dt << Hexa8(nes.cpu.get_next_operand0()) << " ";
 			dt << Hexa8(nes.cpu.get_next_operand1());
 			dt << std::endl;
-			dt << "X: " << Hexa8(nes.cpu.get_x());
+			dt << "A: " << Hexa8(nes.cpu.get_acc());
+			dt << " X: " << Hexa8(nes.cpu.get_x());
 			dt << " Y: " << Hexa8(nes.cpu.get_y());
 			dt << " SP: " << Hexa8(nes.cpu.get_sp());
 			dt << " PS: " << Hexa8(nes.cpu.get_ps());
