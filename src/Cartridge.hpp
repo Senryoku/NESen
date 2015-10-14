@@ -84,13 +84,18 @@ public:
 	{
 		// Mapper 00
 		if(addr >= 0x6000 && addr < 0x8000)
+		{
 			return _prg_ram[(addr - 0x6000) % _prg_ram_size];
-		else if(addr >= 0x8000 && addr < 0xC000)				// First 16 KB of ROM.
+		} else if(addr >= 0x8000 && addr < 0xC000) {			// First 16 KB of ROM.
 			return _prg_rom[(addr - 0x8000) % _prg_rom_size];
-		else if(addr >= 0xC000)									// Last 16 KB of ROM (NROM-256) or mirror of $8000-$BFFF (NROM-128).
-			return _prg_rom[(addr - 0x8000) % _prg_rom_size];
+		} else if(addr >= 0xC000) {								// Last 16 KB of ROM (NROM-256) or mirror of $8000-$BFFF (NROM-128).
+			if(_prg_rom_size > 0x4000)
+				return _prg_rom[(addr - 0x8000)];
+			else
+				return _prg_rom[(addr - 0xC000)];
+		}
 			
-		std::cerr << "Error: Trying to read Cartridge at address 0x" << std::hex << addr << std::endl;
+		std::cerr << "Error: Trying to read Cartridge at address " << Hexa(addr) << std::endl;
 		exit(1);
 		return _prg_rom[0];
 	}

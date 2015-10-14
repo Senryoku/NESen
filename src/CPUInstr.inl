@@ -151,6 +151,13 @@ inline void cpy(addr_t addr)
 	comp(_reg_y, read(addr));
 }
 
+inline void dcp(addr_t addr)
+{
+	word_t v = read(addr);
+	set(StateMask::Carry, v == 0);	/// @todo check
+	write(addr, v - 1);
+}
+
 inline word_t dec(addr_t addr)
 {
 	word_t operand = read(addr);
@@ -335,7 +342,7 @@ inline void rts()
 inline void sax(addr_t addr)
 {
 	/// @todo: check
-	_reg_x = (_reg_x & _reg_acc) + 1;
+	write(addr, (_reg_x & _reg_acc));
 }
 
 inline void sbc(addr_t addr)

@@ -52,7 +52,7 @@ void CPU::set_test_log(const std::string& path)
 void CPU::reset()
 {
 	_reg_pc = read(0xFFFC) | (read(0xFFFD) << 8);
-	//_reg_pc = 0xC000; /// @TODO Remove (here for nestest.nes)
+	_reg_pc = 0xC000; /// @TODO Remove (here for nestest.nes)
 	_reg_sp = 0xFD; /// @TODO: Check
 	_reg_ps = 0x34; /// @TODO: Check
 	_reg_acc = _reg_x = _reg_y = 0x00;
@@ -78,19 +78,28 @@ void CPU::step()
 		
 		if(_reg_pc != expected_addr)
 		{
-			error << instr_count << " ERROR! Got " << Hexa(_reg_pc) << " expected " << Hexa(expected_addr) << std::endl;
-			error << " A:" << Hexa8(_reg_acc) <<
+			error << "[" << std::dec << instr_count << "]\tERROR! Got " << Hexa(_reg_pc) << " expected " << Hexa(expected_addr) << std::endl;
+			error << " >  A:" << Hexa8(_reg_acc) <<
 						" X:" << Hexa8(_reg_x) << 
 						" Y:" << Hexa8(_reg_y) <<
-						" PS:" << Hexa(_reg_ps) <<
+						" PS:" << Hexa8(_reg_ps) <<
 						" SP:" << Hexa(_reg_sp) << std::endl;
 			_reg_pc = expected_addr;
 			error_count++;
 			exit(1);
-		} else log << instr_count << " OK" << std::endl;
+		} else {
+			log << "[" << std::dec << instr_count << "]\t" << Hexa(_reg_pc) << " "
+											<< Hexa8(read(_reg_pc)) << " " 
+											<< Hexa8(read(_reg_pc + 1)) << " " 
+											<< Hexa8(read(_reg_pc + 2)) 
+											<< "\tA:" << Hexa8(_reg_acc)
+											<< " X:" << Hexa8(_reg_x)
+											<< " Y:" << Hexa8(_reg_y)
+											<< " PS:" << Hexa8(_reg_ps)
+											<< " SP:" << Hexa(_reg_sp) << std::endl;
+		}
 	}
-	
-	
+	/*
 	if(ppu->check_nmi())
 	{
 		push16(_reg_pc);
@@ -98,7 +107,7 @@ void CPU::step()
 		_reg_pc = read16(0xFFFA);
 		log << "NMI caused a jump to " << Hexa(_reg_pc) << std::endl;
 	}
-	
+	*/
 	word_t opcode = read(_reg_pc++);
 	execute(opcode);
 }
@@ -119,6 +128,7 @@ void CPU::execute(word_t opcode)
 		/// @see http://datacrystal.romhacking.net/wiki/6502_opcodes
 		/// @see http://e-tradition.net/bytes/6502/6502_instruction_set.html
 		/// @see http://homepage.ntlworld.com/cyborgsystems/CS_Main/6502/6502.htm
+		/// @see http://nesdev.com/undocumented_opcodes.txt
 		
 		// ADC
 		OP(0x61, adc, addr_indirectX);
@@ -162,6 +172,16 @@ void CPU::execute(word_t opcode)
 		OP_(0xD8, cld);
 		OP_(0x58, cli);
 		OP_(0xB8, clv);
+		
+		// DCP (Unofficial)
+		OP(0xC7, dcp, addr_zero);
+		OP(0xD7, dcp, addr_zeroX);
+		OP(0xCF, dcp, addr_abs);
+		OP(0xDF, dcp, addr_absX);
+		OP(0xDB, dcp, addr_absY);
+		OP(0xC3, dcp, addr_indirectX);
+		OP(0xD3, dcp, addr_indirectY);
+		
 		
 		// CMP
 		OP(0xC1, cmp, addr_indirectX);
@@ -314,8 +334,10 @@ void CPU::execute(word_t opcode)
 		OP_(0x60, rts);
 		
 		// Unofficial
-		OP(0xCB, sax, addr_abs);
 		OP(0x83, sax, addr_indirectX);
+		OP(0x87, sax, addr_zero);
+		OP(0x97, sax, addr_zeroY);
+		OP(0x8F, sax, addr_abs);
 		
 		// SBC
 		OP(0xE1, sbc, addr_indirectX);
@@ -323,6 +345,7 @@ void CPU::execute(word_t opcode)
 		OP(0xED, sbc, addr_abs);
 		OP(0xFD, sbc, addr_absX);
 		OP(0xE9, sbc, addr_immediate);
+		OP(0xEB, sbc, addr_immediate);	// Unofficial
 		OP(0xF9, sbc, addr_absY);
 		OP(0xE5, sbc, addr_zero);
 		OP(0xF5, sbc, addr_zeroX);

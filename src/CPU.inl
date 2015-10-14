@@ -144,25 +144,22 @@ inline addr_t CPU::addr_immediate()
 
 inline addr_t CPU::addr_abs()
 {
-	auto r = read(_reg_pc) + static_cast<addr_t>(read(_reg_pc + 1) << 8);
-	++_reg_pc;
-	++_reg_pc;
+	addr_t r = read16(_reg_pc);
+	_reg_pc += 2;
 	return r;
 }
 
 inline addr_t CPU::addr_absX()
 {
-	addr_t r = read(_reg_pc) + (read((_reg_pc + 1) & 0xFFFF) << 8) + _reg_x;
-	++_reg_pc;
-	++_reg_pc;
+	addr_t r = read16(_reg_pc) + _reg_x;
+	_reg_pc += 2;
 	return r;
 }
 
 inline addr_t CPU::addr_absY()
 {
-	addr_t r = read(_reg_pc) + (read((_reg_pc + 1) & 0xFFFF) << 8) + _reg_y;
-	++_reg_pc;
-	++_reg_pc;
+	addr_t r = read16(_reg_pc) + _reg_y;
+	_reg_pc += 2;
 	return r;
 }
 

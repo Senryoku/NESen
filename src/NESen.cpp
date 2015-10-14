@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 	}
 	
 	// For nestest.nes, don't forget to set PC at C000.
-	//nes.cpu.set_test_log("tests/nestest_addr.log");
+	nes.cpu.set_test_log("tests/nestest_addr.log");
 	
 	nes.reset();
 	
@@ -99,64 +99,66 @@ int main(int argc, char* argv[])
 			{
 				nes.step();
 			} while(!debug && !nes.ppu.completed_frame);
-		}
 		
-		nes_screen.update(reinterpret_cast<const uint8_t*>(nes.ppu.get_screen()));
+			// Update screen
 		
-		// Debug display Tilemap
-		{
-			word_t tile_l;
-			word_t tile_h;
-			word_t tile_data0, tile_data1;
-			for(int t = 0; t < 512; ++t)
+			nes_screen.update(reinterpret_cast<const uint8_t*>(nes.ppu.get_screen()));
+			
+			// Debug display Tilemap
 			{
-				size_t tile_off = 8 * (t % 16) + (16 * 8 * 8) * (t / 16); 
-				for(int y = 0; y < 8; ++y)
+				word_t tile_l;
+				word_t tile_h;
+				word_t tile_data0, tile_data1;
+				for(int t = 0; t < 512; ++t)
 				{
-					tile_l = nes.ppu.read(t * 16 + y);
-					tile_h = nes.ppu.read(t * 16 + y + 8);
-					PPU::palette_translation(tile_l, tile_h, tile_data0, tile_data1);
-					for(int x = 0; x < 8; ++x)
+					size_t tile_off = 8 * (t % 16) + (16 * 8 * 8) * (t / 16); 
+					for(int y = 0; y < 8; ++y)
 					{
-						word_t shift = ((7 - x) % 4) * 2;
-						word_t color = ((x > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
-						/// @Todo: Palettes
-						tile_map[tile_off + 16 * 8 * y + x] = (4 - color) * (255/4.0);
+						tile_l = nes.ppu.read(t * 16 + y);
+						tile_h = nes.ppu.read(t * 16 + y + 8);
+						PPU::palette_translation(tile_l, tile_h, tile_data0, tile_data1);
+						for(int x = 0; x < 8; ++x)
+						{
+							word_t shift = ((7 - x) % 4) * 2;
+							word_t color = ((x > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
+							/// @Todo: Palettes
+							tile_map[tile_off + 16 * 8 * y + x] = (4 - color) * (255/4.0);
+						}
 					}
 				}
+				nes_tilemap.update(reinterpret_cast<uint8_t*>(tile_map));
 			}
-			nes_tilemap.update(reinterpret_cast<uint8_t*>(tile_map));
-		}
-		
-		if(true)
-		{
-			std::stringstream dt;
-			dt << "PC: " << Hexa(nes.cpu.get_pc());
-			dt << " SP: " << Hexa(nes.cpu.get_sp());
-			dt << " | OP: " << Hexa8(nes.cpu.get_next_opcode()) << " ";
-			dt << Hexa8(nes.cpu.get_next_operand0()) << " ";
-			dt << Hexa8(nes.cpu.get_next_operand1());
-			dt << std::endl;
-			dt << "A: " << Hexa8(nes.cpu.get_acc());
-			dt << " X: " << Hexa8(nes.cpu.get_x());
-			dt << " Y: " << Hexa8(nes.cpu.get_y());
-			dt << " SP: " << Hexa8(nes.cpu.get_sp());
-			dt << " PS: " << Hexa8(nes.cpu.get_ps());
-			if(nes.cpu.check(CPU::StateMask::Carry)) dt << " C";
-			if(nes.cpu.check(CPU::StateMask::Zero)) dt << " Z";
-			if(nes.cpu.check(CPU::StateMask::Interrupt)) dt << " I";
-			if(nes.cpu.check(CPU::StateMask::Decimal)) dt << " D";
-			if(nes.cpu.check(CPU::StateMask::Break)) dt << " B";
-			if(nes.cpu.check(CPU::StateMask::Overflow)) dt << " O";
-			if(nes.cpu.check(CPU::StateMask::Negative)) dt << " N";
-			dt << std::endl;
-			/*
-			dt << "LY: " << Hexa8(gpu.getLine());
-			dt << " LCDC: " << Hexa8(gpu.getLCDControl());
-			dt << " STAT: " << Hexa8(gpu.getLCDStatus());
-			dt << " P1: " << Hexa8(mmu.read(MMU::P1));
-			*/
-			debug_text.setString(dt.str());
+			
+			if(true)
+			{
+				std::stringstream dt;
+				dt << "PC: " << Hexa(nes.cpu.get_pc());
+				dt << " SP: " << Hexa(nes.cpu.get_sp());
+				dt << " | OP: " << Hexa8(nes.cpu.get_next_opcode()) << " ";
+				dt << Hexa8(nes.cpu.get_next_operand0()) << " ";
+				dt << Hexa8(nes.cpu.get_next_operand1());
+				dt << std::endl;
+				dt << "A: " << Hexa8(nes.cpu.get_acc());
+				dt << " X: " << Hexa8(nes.cpu.get_x());
+				dt << " Y: " << Hexa8(nes.cpu.get_y());
+				dt << " SP: " << Hexa8(nes.cpu.get_sp());
+				dt << " PS: " << Hexa8(nes.cpu.get_ps());
+				if(nes.cpu.check(CPU::StateMask::Carry)) dt << " C";
+				if(nes.cpu.check(CPU::StateMask::Zero)) dt << " Z";
+				if(nes.cpu.check(CPU::StateMask::Interrupt)) dt << " I";
+				if(nes.cpu.check(CPU::StateMask::Decimal)) dt << " D";
+				if(nes.cpu.check(CPU::StateMask::Break)) dt << " B";
+				if(nes.cpu.check(CPU::StateMask::Overflow)) dt << " O";
+				if(nes.cpu.check(CPU::StateMask::Negative)) dt << " N";
+				dt << std::endl;
+				/*
+				dt << "LY: " << Hexa8(gpu.getLine());
+				dt << " LCDC: " << Hexa8(gpu.getLCDControl());
+				dt << " STAT: " << Hexa8(gpu.getLCDStatus());
+				dt << " P1: " << Hexa8(mmu.read(MMU::P1));
+				*/
+				debug_text.setString(dt.str());
+			}
 		}
 		
 	    window.clear(sf::Color::Black);
