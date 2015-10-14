@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 	nes_tilemap_sprite.setScale(screen_scale, screen_scale);
 	// 2 * (256 tiles * (8 * 8) bits per tile)
 	size_t tile_map_size = 2 * 256 * 8 * 8;
-	PPU::color_t* tile_map = new PPU::color_t[tile_map_size];
+	color_t* tile_map = new color_t[tile_map_size];
 	std::memset(tile_map, 0, tile_map_size);
 	
 	sf::Font font;
@@ -96,9 +96,9 @@ int main(int argc, char* argv[])
 		
 		// Debug display Tilemap
 		{
-			PPU::word_t tile_l;
-			PPU::word_t tile_h;
-			PPU::word_t tile_data0, tile_data1;
+			word_t tile_l;
+			word_t tile_h;
+			word_t tile_data0, tile_data1;
 			for(int t = 0; t < 512; ++t)
 			{
 				size_t tile_off = 8 * (t % 16) + (16 * 8 * 8) * (t / 16); 
@@ -109,8 +109,8 @@ int main(int argc, char* argv[])
 					PPU::palette_translation(tile_l, tile_h, tile_data0, tile_data1);
 					for(int x = 0; x < 8; ++x)
 					{
-						PPU::word_t shift = ((7 - x) % 4) * 2;
-						PPU::word_t color = ((x > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
+						word_t shift = ((7 - x) % 4) * 2;
+						word_t color = ((x > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
 						/// @Todo: Palettes
 						tile_map[tile_off + 16 * 8 * y + x] = (4 - color) * (255/4.0);
 					}

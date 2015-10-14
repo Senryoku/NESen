@@ -92,6 +92,7 @@ inline void bpl()
 
 inline void brk()
 {
+	//push(_reg_ps | 0b00110000);
 	error("BRK not implemented");
 }
 
@@ -263,7 +264,7 @@ inline void pha()
 
 inline void php()
 {
-	push(_reg_ps);
+	push(_reg_ps | 0b00110000);
 }
 
 inline void pla()
@@ -274,7 +275,7 @@ inline void pla()
 
 inline void plp()
 {
-	_reg_ps = pop();
+	_reg_ps = pop() & 0b11001111;
 }
 
 inline void rla(addr_t addr)
@@ -320,7 +321,7 @@ inline word_t ror(word_t operand)
 
 inline void rti()
 {
-	_reg_ps = pop();
+	_reg_ps = pop() & 0b11001111;
 	addr_t l = pop();
 	addr_t h = pop();
 	_reg_pc = (h << 8) | l;

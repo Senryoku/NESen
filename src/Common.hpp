@@ -9,6 +9,11 @@ using word_t = uint8_t;
 using addr_t = uint16_t;
 using checksum_t = uint16_t;
 
+inline int from_2c_to_signed(word_t src)
+{
+	return (src & 0x80) ? -((~src + 1) & 0xFF) : src;
+}
+	
 struct color_t
 { 
 	word_t r, g, b, a;

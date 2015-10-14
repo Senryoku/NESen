@@ -1,11 +1,5 @@
 #include "CPU.hpp"
 
-#define OP(C,O,A) case C: O(A()); /*log(#C " " #O " " #A);*/ break;
-#define OPM(C,O,A) case C: { auto tmp = A(); write(tmp, O(tmp)); /*log(#C " " #O " " #A);*/ break; }
-#define OP_(C,O) case C: O(); /*log(#C " " #O " Implied");*/ break;
-#define OPA(C,O) case C: _reg_acc = O(_reg_acc); /*log(#C " " #O " ACC");*/ break;
-
-
 // @todo TODO
 size_t	CPU::instr_length[0x100] = {
 	1, 2, 0, 0, 0, 2, 2, 0, 1, 2, 1, 0, 0, 3, 3, 0, // 0
@@ -47,9 +41,75 @@ size_t	CPU::instr_cycles[0x100] = {
 //  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
 };
 
+void CPU::set_test_log(const std::string& path)
+{
+	_test_file.open(path, std::ios::binary);
+}
+	
+void CPU::reset()
+{
+	_reg_pc = read(0xFFFC) | (read(0xFFFD) << 8);
+	//_reg_pc = 0xC000; /// @TODO Remove (here for nestest.nes)
+	_reg_sp = 0xFD; /// @TODO: Check
+	_reg_ps = 0x34; /// @TODO: Check
+	_reg_acc = _reg_x = _reg_y = 0x00;
+	std::memset(_ram, 0xFF, RAMSize);
+}
+	
+void CPU::step()
+{
+	//std::cout << std::hex << _reg_pc << std::endl;
+		
+	///////////////
+	// TESTING
+	if(_test_file.is_open())
+	{
+		static int instr_count = 0;
+		static int error_count = 0;
+		instr_count++;
+		char str[4];
+		_test_file.getline(str, 6);
+		std::stringstream ss(str);
+		int expected_addr = 0;
+		ss >> std::hex >> expected_addr;
+		
+		if(_reg_pc != expected_addr)
+		{
+			std::cerr << instr_count << " ERROR! Got " << std::hex << (int) _reg_pc << " expected " << std::hex << expected_addr << std::endl;
+			std::cerr << " A:" << std::hex << (int) _reg_acc <<
+						" X:" << std::hex << (int) _reg_x << 
+						" Y:" << std::hex << (int) _reg_y <<
+						" PS:" << std::hex << (int) _reg_ps <<
+						" SP:" << std::hex << (int) _reg_sp << std::endl;
+			_reg_pc = expected_addr;
+			error_count++;
+			exit(1);
+		} else std::cout << instr_count << " OK" << std::endl;
+	}
+	
+	
+	if(ppu->check_nmi())
+	{
+		push(_reg_ps | 0b00100000);
+		push(_reg_pc);
+		_reg_pc = read(0xFFFA) | (read(0xFFFB) << 8);
+	}
+	
+	word_t opcode = read(_reg_pc++);
+	execute(opcode);
+}
+
+#define OP(C,O,A) case C: O(A()); /*log(#C " " #O " " #A);*/ break;
+#define OPM(C,O,A) case C: { auto tmp = A(); write(tmp, O(tmp)); /*log(#C " " #O " " #A);*/ break; }
+#define OP_(C,O) case C: O(); /*log(#C " " #O " Implied");*/ break;
+#define OPA(C,O) case C: _reg_acc = O(_reg_acc); /*log(#C " " #O " ACC");*/ break;
+
 void CPU::execute(word_t opcode)
 {
 	_cycles = instr_cycles[opcode];
+	/// @todo Handle these cases (for some instructions):
+	/// * add 1 to cycles if page boundery is crossed
+	/// ** add 1 to cycles if branch occurs on same page add 2 to cycles if branch occurs to different page
 	switch(opcode)
 	{			
 		/// @see http://datacrystal.romhacking.net/wiki/6502_opcodes

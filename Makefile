@@ -191,6 +191,30 @@ src/CPU.cpp.s:
 	$(MAKE) -f CMakeFiles\NESen.dir\build.make CMakeFiles/NESen.dir/src/CPU.cpp.s
 .PHONY : src/CPU.cpp.s
 
+src/Common.obj: src/Common.cpp.obj
+.PHONY : src/Common.obj
+
+# target to build an object file
+src/Common.cpp.obj:
+	$(MAKE) -f CMakeFiles\NESen.dir\build.make CMakeFiles/NESen.dir/src/Common.cpp.obj
+.PHONY : src/Common.cpp.obj
+
+src/Common.i: src/Common.cpp.i
+.PHONY : src/Common.i
+
+# target to preprocess a source file
+src/Common.cpp.i:
+	$(MAKE) -f CMakeFiles\NESen.dir\build.make CMakeFiles/NESen.dir/src/Common.cpp.i
+.PHONY : src/Common.cpp.i
+
+src/Common.s: src/Common.cpp.s
+.PHONY : src/Common.s
+
+# target to generate assembly for a file
+src/Common.cpp.s:
+	$(MAKE) -f CMakeFiles\NESen.dir\build.make CMakeFiles/NESen.dir/src/Common.cpp.s
+.PHONY : src/Common.cpp.s
+
 src/NESen.obj: src/NESen.cpp.obj
 .PHONY : src/NESen.obj
 
@@ -232,6 +256,9 @@ help:
 	@echo ... src/CPU.obj
 	@echo ... src/CPU.i
 	@echo ... src/CPU.s
+	@echo ... src/Common.obj
+	@echo ... src/Common.i
+	@echo ... src/Common.s
 	@echo ... src/NESen.obj
 	@echo ... src/NESen.i
 	@echo ... src/NESen.s

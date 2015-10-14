@@ -69,7 +69,10 @@ public:
 		
 		_prg_ram = new byte_t[_prg_ram_size];
 		
+		_mapper = ((flag6 & 0b11110000) >> 4) & (h[7] & 0b11110000);
+		
 		std::cout << "Loaded '" << path << "' successfully! " << std::endl << 
+					"> Mapper: " << _mapper << std::endl <<
 					"> PRG Cartridge size: " << 16 * h[4] << "kB (" << _prg_rom_size << "B)" << std::endl <<
 					"> CHR Cartridge size: " << 8 * h[5] << "kB (" << _chr_rom_size << "B)" << std::endl <<
 					"> PRG RAM size: " << 8 * h[8] << "kB (" << _prg_ram_size << "B)" << std::endl;
@@ -82,12 +85,13 @@ public:
 		// Mapper 00
 		if(addr >= 0x6000 && addr < 0x8000)
 			return _prg_ram[(addr - 0x6000) % _prg_ram_size];
-		else if(addr >= 0x8000 && addr < 0xC000)
+		else if(addr >= 0x8000 && addr < 0xC000)				// First 16 KB of ROM.
 			return _prg_rom[(addr - 0x8000) % _prg_rom_size];
-		else if(addr >= 0xC000)
-			return _prg_rom[(addr - 0xC000) % _prg_rom_size];
+		else if(addr >= 0xC000)									// Last 16 KB of ROM (NROM-256) or mirror of $8000-$BFFF (NROM-128).
+			return _prg_rom[(addr - 0x8000) % _prg_rom_size];
 			
 		std::cerr << "Error: Trying to read Cartridge at address 0x" << std::hex << addr << std::endl;
+		exit(1);
 		return _prg_rom[0];
 	}
 	
@@ -100,6 +104,8 @@ private:
 	size_t	_prg_rom_size = 0;
 	size_t	_chr_rom_size = 0;
 	size_t	_prg_ram_size = 0;
+	
+	int		_mapper = 0;
 		
 	byte_t*	_trainer = nullptr;
 	byte_t*	_prg_rom = nullptr;

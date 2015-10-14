@@ -12,31 +12,7 @@
 **/ 
 class PPU
 {
-public:
-	using word_t = uint8_t;
-	using addr_t = uint16_t;
-	struct color_t
-	{ 
-		word_t r = 0, g = 0, b = 0, a = 0;
-		
-		color_t& operator=(const color_t& v) =default;
-		inline bool operator==(const color_t& v)
-		{
-			return r == v.r && g == v.g && b == v.b && a == v.a;
-		}
-		
-		inline color_t& operator=(word_t val)
-		{
-			r = g = b = a = val;
-			return *this;
-		}
-		
-		inline bool operator==(word_t val)
-		{
-			return r == g && g == b && b == a && a == val;
-		}
-	};
-	
+public:	
 	const size_t ScreenWidth = 256;
 	const size_t ScreenHeight = 240;
 	const size_t CyclesPerScanline = 240;
@@ -205,6 +181,8 @@ public:
 					++sprite_pixel;
 				}
 			}
+
+			_line = (_line + 1) % 260;
 			// VBlank at 241
 			if(_line == 241)
 			{
@@ -213,7 +191,8 @@ public:
 				completed_frame = true;
 				_ppu_status &= ~VBlank;
 			}
-			_line = (_line + 1) % 260;
+			
+			_nmi = (_ppu_control & VBlankEnable) && (_ppu_status & VBlank);
 		}
 	}
 	
@@ -230,6 +209,13 @@ public:
 	
 	bool completed_frame = false;
 	
+	inline bool check_nmi()
+	{
+		bool r = _nmi;
+		_nmi = false;
+		return r;
+	}
+	
 private:
 	unsigned int _cycles = 0;
 	unsigned int _frame = 0;
@@ -244,6 +230,8 @@ private:
 	bool		_scroll_first_read = true;
 	word_t		_scroll_x = 0;				// Access by $2005
 	word_t		_scroll_y = 0;				// Access by $2005
+	
+	bool 		_nmi = false; 				// Non-Maskable Interrupt 
 	
 	bool		_ppu_addr_upper = true;
 	addr_t		_ppu_addr = 0;				// Access by $2006

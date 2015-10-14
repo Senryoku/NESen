@@ -10,12 +10,13 @@ set(NESen 0)
 include_directories("${PROJECT_BINARY_DIR}")
 include_directories("${CMAKE_SOURCE_DIR}/src")
 
-SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --std=c++11 -Wall" )
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --std=c++11 -Wall")
 
 # Define sources and executable
 set(EXECUTABLE_NAME "NESen")
 set(SOURCES
 	src/CPU.cpp
+	src/Common.cpp
 	src/NESen.cpp
 )
 add_executable(${EXECUTABLE_NAME} ${SOURCES})

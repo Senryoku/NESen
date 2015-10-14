@@ -21,10 +21,7 @@
 **/
 class CPU
 {
-public:
-	using word_t = uint8_t;
-	using addr_t = uint16_t;
-	
+public:	
 	static constexpr addr_t RAMSize = 0x0800;
 	static constexpr size_t ClockRate = 1789773; // Hz
 	
@@ -42,136 +39,31 @@ public:
 		delete _ram;
 	}
 	
-	inline void log(const std::string& str)
-	{
-		std::cout << str << std::endl;
-	}
+	void reset();
 	
-	inline void error(const std::string& str)
-	{
-		std::cerr << str << std::endl;
-	}
+	void set_test_log(const std::string& path);
 	
-	void reset()
-	{
-		_reg_pc = read(0xFFFC) | (read(0xFFFD) << 8);
-		//_reg_pc = 0xC000; /// @TODO Remove (here for nestest.nes)
-		_reg_sp = 0xFD; /// @TODO: Check
-		_reg_ps = 0x34; /// @TODO: Check
-		_reg_acc = _reg_x = _reg_y = 0x00;
-		std::memset(_ram, 0xFF, RAMSize);
-	}
+	inline void log(const std::string& str);
+	inline void error(const std::string& str);
 	
-	void set_test_log(const std::string& path)
-	{
-		_test_file.open(path, std::ios::binary);
-	}
-	
-	void step()
-	{
-		//std::cout << std::hex << _reg_pc << std::endl;
-			
-		///////////////
-		// TESTING
-		if(_test_file.is_open())
-		{
-			static int instr_count = 0;
-			static int error_count = 0;
-			instr_count++;
-			char str[4];
-			_test_file.getline(str, 6);
-			std::stringstream ss(str);
-			int expected_addr = 0;
-			ss >> std::hex >> expected_addr;
-			
-			if(_reg_pc != expected_addr)
-			{
-				std::cerr << instr_count << " ERROR! Got " << std::hex << (int) _reg_pc << " expected " << std::hex << expected_addr << std::endl;
-				std::cerr << " A:" << std::hex << (int) _reg_acc <<
-							" X:" << std::hex << (int) _reg_x << 
-							" Y:" << std::hex << (int) _reg_y <<
-							" PS:" << std::hex << (int) _reg_ps <<
-							" SP:" << std::hex << (int) _reg_sp << std::endl;
-				_reg_pc = expected_addr;
-				error_count++;
-				exit(1);
-			} else std::cout << instr_count << " OK" << std::endl;
-		}
-		
-		word_t opcode = read(_reg_pc++);
-		execute(opcode);
-	}
-	
+	void step();	
 	void execute(word_t opcode);
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	// Memory access
-	
-	word_t read(addr_t addr) const
-	{
-		if(addr < RAMSize)
-			return _ram[addr];
-		else if(addr < 0x2000) // RAM mirrors
-			return _ram[addr % RAMSize];
-		else if(addr < 0x2008) // PPU registers
-			return ppu->read(addr);
-		else if(addr < 0x4000) // PPU registers mirrors
-			return ppu->read(addr);
-		else if(addr < 0x4018) // pAPU
-			return apu->read(addr);
-		else if(addr < 0x4020) // Controllers registers
-			return 0; /// @todo
-		else if(addr < 0x5000) // Unused
-			return 0;
-		else if(addr < 0x6000) // Expansion
-			return cartridge->read(addr);
-		else if(addr < 0x8000) // SRAM
-			return cartridge->read(addr);
-		else if(addr <= 0xFFFF) // Cartridge
-			return cartridge->read(addr);
-		else
-			return 0; // Error
-	}
-	
-	void write(addr_t addr, word_t value)
-	{
-		if(addr < RAMSize)
-			_ram[addr] = value;
-		else if(addr < 0x2000) // RAM mirrors
-			_ram[addr % RAMSize] = value;
-		else if(addr < 0x2008) // PPU registers
-			ppu->write(addr, value);
-		else if(addr == 0x4014) // OAMDMA
-			oam_dma(value);
-		else if(addr < 0x4000) // PPU registers mirrors
-			ppu->write(addr, value);
-		else if(addr < 0x4018) // pAPU / Controllers registers
-			apu->write(addr - 0x4000, value);
-		else if(addr < 0x4020) // Controllers registers
-			(void) 0; /// @todo
-		else {
-			std::cerr << "Error: Write addr 0x" << std::hex << addr << " out of bounds." << std::endl;
-			exit(1);
-		}
-	}
+	inline word_t read(addr_t addr) const;
+	inline void write(addr_t addr, word_t value);
+	////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	// Stack
-	
-	inline void push(word_t value)
-	{
-		_ram[0x100 + _reg_sp--] = value;
-	}
-	
-	inline word_t pop()
-	{
-		return _ram[0x100 + ++_reg_sp];
-	}
+	inline void push(word_t value);
+	inline word_t pop();
+	////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	// Processor Status Flags
 	// @todo Use an other form of storage until status is queried ?
-	
 	enum StateMask : uint8_t
 	{
 		Carry		= 0b00000001,
@@ -183,43 +75,16 @@ public:
 		Negative	= 0b10000000
 	};
 	
-	inline bool check(StateMask mask)
-	{
-		return (_reg_ps & mask);
-	}
-	
-	inline void set(StateMask mask)
-	{
-		_reg_ps |= mask;
-	}
-	
-	inline void clear(StateMask mask)
-	{
-		_reg_ps &= ~mask;
-	}
-	
-	inline void set(StateMask mask, bool b)
-	{
-		b ? set(mask) : clear(mask);
-	}
-	
+	inline bool check(StateMask mask);
+	inline void set(StateMask mask);
+	inline void clear(StateMask mask);
+	inline void set(StateMask mask, bool b);
 	/// Clears the Negative Flag if the operand is $#00-7F, otherwise sets it.
-	inline void set_neg(word_t operand)
-	{
-		set(StateMask::Negative, operand & 0b10000000);
-	}
-	
+	inline void set_neg(word_t operand);
 	/// Sets the Zero Flag if the operand is $#00, otherwise clears it.
-	inline void set_zero(word_t operand)
-	{
-		set(StateMask::Zero, operand == 0);
-	}
-	
-	inline void set_neg_zero(word_t operand)
-	{
-		set_neg(operand);
-		set_zero(operand);
-	}
+	inline void set_zero(word_t operand);
+	inline void set_neg_zero(word_t operand);
+	////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	inline addr_t get_pc() const { return _reg_pc; }
 	inline word_t get_acc() const { return _reg_acc; }
@@ -264,96 +129,20 @@ private:
 			ppu->write(0x2004, _ram[start + a]);
 	}
 	
-	inline int from_2c_to_signed(word_t src)
-	{
-		return (src & 0x80) ? -((~src + 1) & 0xFF) : src;
-	}
-	
 	#include "CPUInstr.inl"
 	
 	// Addressing Modes
 	
-	inline addr_t addr_immediate()
-	{
-		auto r = _reg_pc;
-		++_reg_pc;
-		return r;
-	}
-	
-	inline addr_t addr_abs()
-	{
-		auto r = read(_reg_pc) + static_cast<addr_t>(read(_reg_pc + 1) << 8);
-		++_reg_pc;
-		++_reg_pc;
-		return r;
-	}
-	
-	inline addr_t addr_absX()
-	{
-		addr_t r = read(_reg_pc) + (read((_reg_pc + 1) & 0xFFFF) << 8) + _reg_x;
-		++_reg_pc;
-		++_reg_pc;
-		return r;
-	}
-	
-	inline addr_t addr_absY()
-	{
-		addr_t r = read(_reg_pc) + (read((_reg_pc + 1) & 0xFFFF) << 8) + _reg_y;
-		++_reg_pc;
-		++_reg_pc;
-		return r;
-	}
-	
-	inline addr_t addr_zero()
-	{
-		addr_t r = read(_reg_pc);
-		++_reg_pc;
-		return r & 0xFF;
-	}
-	
-	inline addr_t addr_zeroX()
-	{
-		addr_t r = (read(_reg_pc) + _reg_x) & 0xFF;
-		++_reg_pc;
-		return r;
-	}
-	
-	inline addr_t addr_zeroY()
-	{
-		addr_t r = (read(_reg_pc) + _reg_y) & 0xFF;
-		++_reg_pc;
-		return r;
-	}
-	
-	inline addr_t addr_indirect()
-	{
-		addr_t l = read(_reg_pc);
-		addr_t h = read((_reg_pc + 1) & 0xFFFF);
-		++_reg_pc;
-		++_reg_pc;
-		addr_t tmp = (l | (h << 8));
-		// This addressing mode is bugged on the actual hardware!
-		//                       Here! \/
-		return read(tmp) + ((read((((l + 1) & 0xFF) | (h << 8))) & 0xFF) << 8);
-		// 'Correct' version:
-		// return read(tmp) + ((read(tmp + 1) & 0xFF) << 8);
-	}
-	
-	inline addr_t addr_indirectX()
-	{
-		addr_t tmp = read(_reg_pc);
-		addr_t l = read((_reg_x + tmp) & 0xFF);
-		addr_t h = read((_reg_x + tmp + 1) & 0xFF);
-		++_reg_pc;
-		return (l | (h << 8));
-	}
-	
-	inline addr_t addr_indirectY()
-	{
-		addr_t tmp = read(_reg_pc);
-		addr_t l = read(tmp);
-		addr_t h = read((tmp + 1) & 0xFF);
-		++_reg_pc;
-		return ((l | (h << 8)) + _reg_y) & 0xFFFF;
-	}
+	inline addr_t addr_immediate();
+	inline addr_t addr_abs();
+	inline addr_t addr_absX();
+	inline addr_t addr_absY();
+	inline addr_t addr_zero();
+	inline addr_t addr_zeroX();
+	inline addr_t addr_zeroY();
+	inline addr_t addr_indirect();
+	inline addr_t addr_indirectX();
+	inline addr_t addr_indirectY();
 };
+
+#include "CPU.inl"
