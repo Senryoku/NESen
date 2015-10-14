@@ -48,8 +48,8 @@ inline word_t asl(word_t operand)
 // Helper
 inline void relative_jump(bool b)
 {
-	word_t offset = read(_reg_pc);
-	b ? _reg_pc += offset + 1 - ((offset & 0b10000000) ? 0x100 : 0):
+	int offset = read(_reg_pc);
+	b ? _reg_pc += (offset & 0x80) ? -((~offset + 1) & 0xFF) : offset:
 		_reg_pc++;
 }
 
@@ -408,4 +408,11 @@ inline void tya()
 {
 	set_neg_zero(_reg_y);
 	_reg_acc = _reg_y;
+}
+
+inline void isc(addr_t addr)
+{
+	word_t v = read(addr) + 1;
+	write(addr, v);
+	sbc(addr);
 }

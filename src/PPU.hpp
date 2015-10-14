@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 #include "Cartridge.hpp"
 
 /**
@@ -100,13 +102,14 @@ public:
 		if(addr < 0x2000) // CHR ROM (Or re-routed by cartridge)
 			return cartridge->read_chr(addr);
 		
-		switch(addr)
+		assert(addr < 0x4000);
+		switch(addr & 0x7)
 		{
-			case 0x2000: return _ppu_control;
-			case 0x2001: return _ppu_mask;
-			case 0x2002: return _ppu_status;
-			case 0x2004: return _oam[_oam_addr];
-			case 0x2007: 
+			case 0x00: return _ppu_control;
+			case 0x01: return _ppu_mask;
+			case 0x02: return _ppu_status;
+			case 0x04: return _oam[_oam_addr];
+			case 0x07: 
 				_ppu_addr += (_ppu_control & VerticalWrite) ? 32 : 1;
 				return _mem[_ppu_addr];
 		}
@@ -117,28 +120,29 @@ public:
 	/// Write from CPU
 	inline void write(addr_t addr, word_t value)
 	{
-		switch(addr)
+		assert(addr >= 0x2000 && addr < 0x4000);
+		switch(addr & 0x7)
 		{
-			case 0x2000: _ppu_control = value; break;
-			case 0x2001: _ppu_mask = value; break;
-			case 0x2002: _ppu_status = value; break;
-			case 0x2003: _oam_addr = value; break;
-			case 0x2004: _oam[_oam_addr++] = value; break;
-			case 0x2005: // Scrolling Register
+			case 0x00: _ppu_control = value; break;
+			case 0x01: _ppu_mask = value; break;
+			case 0x02: _ppu_status = value; break;
+			case 0x03: _oam_addr = value; break;
+			case 0x04: _oam[_oam_addr++] = value; break;
+			case 0x05: // Scrolling Register
 				if(_scroll_first_read)
 					_scroll_x = value;
 				else
 					_scroll_y = value;
 				_scroll_first_read = !_scroll_first_read;
 			break;
-			case 0x2006:
+			case 0x06:
 				if(_ppu_addr_upper)
 					_ppu_addr = (_ppu_addr & 0x00FF) | (value << 8);
 				else
 					_ppu_addr = (_ppu_addr & 0xFF00) | value;
 				_ppu_addr_upper = !_scroll_first_read;
 			break;
-			case 0x2007:
+			case 0x07:
 				_mem[_ppu_addr] = value;
 				//std::cout << "PPU Write: 0x" << std::hex << _ppu_addr << std::endl;
 				_ppu_addr += (_ppu_control & VerticalWrite) ? 32 : 1;
@@ -159,6 +163,7 @@ public:
 		_cycles += 3 * cpu_cycles;
 		if(_cycles > CyclesPerScanline)
 		{
+			_cycles -= CyclesPerScanline;
 			if(_line < ScreenHeight)
 			{
 				word_t t;
@@ -182,7 +187,7 @@ public:
 						tile_h = read(patterns + t * 16 + y + 8);
 						palette_translation(tile_l, tile_h, tile_data0, tile_data1);
 					}
-										
+
 					word_t shift = ((7 - x) % 4) * 2;
 					word_t color = ((x > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
 					/// @todo Palette

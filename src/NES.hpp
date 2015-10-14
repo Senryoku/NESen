@@ -56,7 +56,7 @@ public:
 	void step()
 	{
 		cpu.step();
-		ppu.step(cpu.get_instr_cycles());
+		ppu.step(cpu.get_cycles());
 	}
 	
 private:

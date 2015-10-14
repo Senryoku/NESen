@@ -40,14 +40,7 @@ public:
 	~CPU()
 	{
 		delete _ram;
-	} 
-	
-	inline unsigned int getCycles() const
-	{
-		return _cycles;
 	}
-	
-	inline size_t get_instr_cycles() const { return 10; } /// @todo !
 	
 	inline void log(const std::string& str)
 	{
@@ -151,7 +144,7 @@ public:
 		else if(addr == 0x4014) // OAMDMA
 			oam_dma(value);
 		else if(addr < 0x4000) // PPU registers mirrors
-			ppu->write(addr % 0x08, value);
+			ppu->write(addr, value);
 		else if(addr < 0x4018) // pAPU / Controllers registers
 			apu->write(addr - 0x4000, value);
 		else if(addr < 0x4020) // Controllers registers
@@ -238,6 +231,11 @@ public:
 	inline word_t get_next_opcode() const { return read(_reg_pc); }
 	inline word_t get_next_operand0() const { return read(_reg_pc + 1); }
 	inline word_t get_next_operand1() const { return read(_reg_pc + 2); }
+	
+	inline size_t get_cycles() const { return _cycles; }
+	
+	static size_t instr_length[0x100];
+	static size_t instr_cycles[0x100];
 	
 private:
 	// Registers
