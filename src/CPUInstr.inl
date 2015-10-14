@@ -48,9 +48,8 @@ inline word_t asl(word_t operand)
 // Helper
 inline void relative_jump(bool b)
 {
-	int offset = read(_reg_pc);
-	b ? _reg_pc += (offset & 0x80) ? -((~offset + 1) & 0xFF) : offset:
-		_reg_pc++;
+	int offset = read(_reg_pc++);
+	if(b)_reg_pc += from_2c_to_signed(offset);
 }
 
 inline void bcc()

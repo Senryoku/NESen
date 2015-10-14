@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include "Common.hpp"
 #include "Cartridge.hpp"
 
 /**
@@ -107,13 +108,21 @@ public:
 		{
 			case 0x00: return _ppu_control;
 			case 0x01: return _ppu_mask;
-			case 0x02: return _ppu_status;
+			case 0x02: 
+			{
+				word_t r = _ppu_status;
+				_ppu_status &= ~VBlank; // Clear VBlank Status when reading it
+				return r;
+			}
 			case 0x04: return _oam[_oam_addr];
 			case 0x07: 
+			{
+				word_t r = _mem[_ppu_addr];
 				_ppu_addr += (_ppu_control & VerticalWrite) ? 32 : 1;
-				return _mem[_ppu_addr];
+				return r;
+			}
 		}
-		std::cerr << "Read on unsupported PPU register: 0x" << std::hex << addr << std::endl;
+		std::cerr << "Read on unsupported PPU register: " << Hexa(addr) << std::endl;
 		return 0;
 	}
 	
@@ -144,11 +153,11 @@ public:
 			break;
 			case 0x07:
 				_mem[_ppu_addr] = value;
-				//std::cout << "PPU Write: 0x" << std::hex << _ppu_addr << std::endl;
+				//std::cout << "PPU Write: " << Hexa(_ppu_addr) << std::endl;
 				_ppu_addr += (_ppu_control & VerticalWrite) ? 32 : 1;
 			break;
 			default:
-				std::cerr << "Write on unsupported PPU address: 0x" << std::hex << addr << std::endl;
+				std::cerr << "Write on unsupported PPU address: " << Hexa(addr) << std::endl;
 			break;
 		}
 	}
@@ -160,6 +169,7 @@ public:
 	
 	void step(size_t cpu_cycles)
 	{
+		completed_frame = false;
 		_cycles += 3 * cpu_cycles;
 		if(_cycles > CyclesPerScanline)
 		{
@@ -196,8 +206,13 @@ public:
 				}
 			}
 			// VBlank at 241
-			if(_line == 241) _ppu_status |= VBlank;
-			else if(_line == 0) _ppu_status &= ~VBlank;
+			if(_line == 241)
+			{
+				_ppu_status |= VBlank;
+			} else if(_line == 0) {
+				completed_frame = true;
+				_ppu_status &= ~VBlank;
+			}
 			_line = (_line + 1) % 260;
 		}
 	}
@@ -212,6 +227,8 @@ public:
 			r1 |= ((l & (1 << i)) << (2 * i - i)) | 
 					((h & (1 << i)) << (2 * i + 1 - i));
 	}
+	
+	bool completed_frame = false;
 	
 private:
 	unsigned int _cycles = 0;

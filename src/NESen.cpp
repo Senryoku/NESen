@@ -6,22 +6,6 @@
 
 #include "NES.hpp"
 
-template<typename T>
-struct HexaGen
-{
-	T		v;
-	HexaGen(T _t) : v(_t) {}
-};
-
-template<typename T>
-std::ostream& operator<<(std::ostream& os, const HexaGen<T>& t)
-{
-	return os << "0x" << std::hex << std::setw(sizeof(T) * 2) << std::setfill('0') << (int) t.v;
-}
-
-using Hexa = HexaGen<CPU::addr_t>;
-using Hexa8 = HexaGen<CPU::word_t>;
-
 int main(int argc, char* argv[])
 {
 	std::string path = "tests/Ice Climber (USA, Europe).nes";
@@ -103,7 +87,11 @@ int main(int argc, char* argv[])
 			}
 		}
 		
-		nes.step();
+		do
+		{
+			nes.step();
+		} while(!nes.ppu.completed_frame);
+		
 		nes_screen.update(reinterpret_cast<const uint8_t*>(nes.ppu.get_screen()));
 		
 		// Debug display Tilemap

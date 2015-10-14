@@ -95,7 +95,7 @@ public:
 				_reg_pc = expected_addr;
 				error_count++;
 				exit(1);
-			} //else std::cout << instr_count << " OK" << std::endl;
+			} else std::cout << instr_count << " OK" << std::endl;
 		}
 		
 		word_t opcode = read(_reg_pc++);
@@ -262,6 +262,11 @@ private:
 		addr_t start = (value << 8);
 		for(addr_t a = 0; a < 256; ++a)
 			ppu->write(0x2004, _ram[start + a]);
+	}
+	
+	inline int from_2c_to_signed(word_t src)
+	{
+		return (src & 0x80) ? -((~src + 1) & 0xFF) : src;
 	}
 	
 	#include "CPUInstr.inl"
