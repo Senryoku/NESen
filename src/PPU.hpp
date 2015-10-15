@@ -125,11 +125,11 @@ public:
 					_ppu_addr = (_ppu_addr & 0x00FF) | (value << 8);
 				else
 					_ppu_addr = (_ppu_addr & 0xFF00) | value;
-				_ppu_addr_upper = !_scroll_first_read;
+				_ppu_addr_upper = !_ppu_addr_upper;
 			break;
 			case 0x07:
 				_mem[_ppu_addr] = value;
-				//std::cout << "PPU Write: " << Hexa(_ppu_addr) << std::endl;
+				//std::cout << "PPU Write: " << Hexa(_ppu_addr) << " = " << Hexa8(value) << std::endl;
 				_ppu_addr += (_ppu_control & VerticalWrite) ? 32 : 1;
 			break;
 			default:
@@ -156,11 +156,12 @@ public:
 				word_t tile_l;
 				word_t tile_h;
 				word_t tile_data0 = 0, tile_data1 = 0;
-				word_t y = (_scroll_y + _line) & 3;
-				word_t sprite_pixel = _scroll_x & 3;
+				word_t y = (_scroll_y + _line) & 7;
+				word_t sprite_pixel = _scroll_x & 7;
 				addr_t nametable = 0x2000 + 0x400 * (_ppu_control & NameTableAddress);
+				//addr_t attributetable = 0x23C0 + 0x400 * (_ppu_control & NameTableAddress);
 				addr_t patterns = (_ppu_control & BackgoundPatternTableAddress) ? 0x1000 : 0;
-				nametable += (_scroll_x >> 3) + 32 * ((_scroll_y + _line) >> 3);
+				nametable += 32 * ((_scroll_y + _line) >> 3);
 				//word_t palette = 0;
 				for(size_t x = 0; x < ScreenWidth; ++x)
 				{
@@ -174,8 +175,8 @@ public:
 						palette_translation(tile_l, tile_h, tile_data0, tile_data1);
 					}
 
-					word_t shift = ((7 - x) % 4) * 2;
-					word_t color = ((x > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
+					word_t shift = ((7 - sprite_pixel) % 4) * 2;
+					word_t color = ((sprite_pixel > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
 					/// @todo Palette
 					_screen[_line * ScreenWidth + x] = color * 64;
 					++sprite_pixel;
@@ -215,6 +216,8 @@ public:
 		_nmi = false;
 		return r;
 	}
+	
+	inline word_t get_mem(addr_t addr) const { return _mem[addr]; }
 	
 private:
 	unsigned int _cycles = 0;

@@ -9,6 +9,8 @@
 bool debug = true;
 bool step = true;
 
+addr_t nametable_addr = 0x2000;
+
 int main(int argc, char* argv[])
 {
 	std::string path = "tests/Ice Climber (USA, Europe).nes";
@@ -24,14 +26,14 @@ int main(int argc, char* argv[])
 	}
 	
 	// For nestest.nes, don't forget to set PC at C000.
-	nes.cpu.set_test_log("tests/nestest_addr.log");
+	//nes.cpu.set_test_log("tests/nestest_addr.log");
 	
 	nes.reset();
 	
 	float screen_scale = 2.0f;
 	
 	size_t padding = 200;
-	sf::RenderWindow window(sf::VideoMode(screen_scale * nes.ppu.ScreenWidth + padding + 600, 
+	sf::RenderWindow window(sf::VideoMode(screen_scale * nes.ppu.ScreenWidth + 2 * padding + screen_scale * (16 * 8 + 32 * 8), 
 											screen_scale * nes.ppu.ScreenHeight + padding), 
 											"NESen");
 	window.setVerticalSyncEnabled(false);
@@ -56,6 +58,19 @@ int main(int argc, char* argv[])
 	size_t tile_map_size = 2 * 256 * 8 * 8;
 	color_t* tile_map = new color_t[tile_map_size];
 	std::memset(tile_map, 0, tile_map_size);
+	
+	sf::Texture	nes_nametable;
+	if(!nes_nametable.create(32 * 8, 30 * 8))
+		std::cerr << "Error creating the vram texture!" << std::endl;
+	sf::Sprite nes_nametable_sprite;
+	nes_nametable_sprite.setTexture(nes_nametable);
+	nes_nametable_sprite.setPosition(nes_tilemap_sprite.getPosition().x + 
+		nes_tilemap_sprite.getGlobalBounds().width + padding / 2, 
+		padding / 2);
+	nes_nametable_sprite.setScale(screen_scale, screen_scale);
+	size_t nametable_size = 30 * 32 * 8 * 8;
+	color_t* nametable = new color_t[nametable_size];
+	std::memset(nametable, 0, nametable_size);
 	
 	sf::Font font;
 	if(!font.loadFromFile("data/Hack-Regular.ttf"))
@@ -87,6 +102,10 @@ int main(int argc, char* argv[])
 					case sf::Keyboard::Escape: window.close(); break;
 					case sf::Keyboard::Return: debug = !debug; break;
 					case sf::Keyboard::Space: step = true; break;
+					case sf::Keyboard::N: 
+						nametable_addr = 0x2000 + ((nametable_addr + 0x400) % 0x1000); 
+						std::cout << "Nametable: " << Hexa(nametable_addr) << std::endl; 
+						break;
 					default: break;
 				}
 			}
@@ -122,11 +141,38 @@ int main(int argc, char* argv[])
 							word_t shift = ((7 - x) % 4) * 2;
 							word_t color = ((x > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
 							/// @Todo: Palettes
-							tile_map[tile_off + 16 * 8 * y + x] = (4 - color) * (255/4.0);
+							tile_map[tile_off + 16 * 8 * y + x] = color * 64;
 						}
 					}
 				}
 				nes_tilemap.update(reinterpret_cast<uint8_t*>(tile_map));
+			}
+			
+			// Nametables
+			{
+				word_t tile_l;
+				word_t tile_h;
+				word_t tile_data0, tile_data1;
+				for(int n = 0; n < 32 * 30; ++n)
+				{
+					size_t tile_off = 8 * (n % 32) + (32 * 8 * 8) * (n / 32); 
+					word_t t = nes.ppu.get_mem(nametable_addr + n);
+					//std::cout << " n: " << Hexa8(n) << " t: " << Hexa8(t) << std::endl;
+					for(int y = 0; y < 8; ++y)
+					{
+						tile_l = nes.ppu.read(t * 16 + y);
+						tile_h = nes.ppu.read(t * 16 + y + 8);
+						PPU::palette_translation(tile_l, tile_h, tile_data0, tile_data1);
+						for(int x = 0; x < 8; ++x)
+						{
+							word_t shift = ((7 - x) % 4) * 2;
+							word_t color = ((x > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
+							/// @Todo: Palettes
+							nametable[tile_off + 32 * 8 * y + x] = color * 64;
+						}
+					}
+				}
+				nes_nametable.update(reinterpret_cast<uint8_t*>(nametable));
 			}
 			
 			if(true)
@@ -164,6 +210,7 @@ int main(int argc, char* argv[])
 	    window.clear(sf::Color::Black);
 		window.draw(nes_screen_sprite);
 		window.draw(nes_tilemap_sprite);
+		window.draw(nes_nametable_sprite);
 		window.draw(debug_text);
 		window.draw(log_text);
         window.display();
