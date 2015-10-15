@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // CPU Inline functions
 
-word_t CPU::read(addr_t addr) const
+word_t CPU::read(addr_t addr)
 {
 	if(addr < RAMSize)
 		return _ram[addr];
@@ -11,10 +11,12 @@ word_t CPU::read(addr_t addr) const
 		return ppu->read(addr);
 	else if(addr < 0x4000) // PPU registers mirrors
 		return ppu->read(addr);
-	else if(addr < 0x4018) // pAPU
+	else if(addr < 0x4016) // pAPU
 		return apu->read(addr);
-	else if(addr < 0x4020) // Controllers registers
-		return 0; /// @todo
+	else if(addr == 0x4016) // Controllers registers
+		return read_controller_state();
+	else if(addr == 0x4017) // Controllers registers
+		return read_controller2_state();
 	else if(addr < 0x5000) // Unused
 		return 0;
 	else if(addr < 0x6000) // Expansion
@@ -29,7 +31,7 @@ word_t CPU::read(addr_t addr) const
 	}
 }
 
-addr_t CPU::read16(addr_t addr) const
+addr_t CPU::read16(addr_t addr)
 {
 	return read(addr) | (read(addr + 1) << 8);
 }
@@ -46,10 +48,10 @@ void CPU::write(addr_t addr, word_t value)
 		oam_dma(value);
 	else if(addr < 0x4000) // PPU registers mirrors
 		ppu->write(addr, value);
-	else if(addr < 0x4018) // pAPU / Controllers registers
+	else if(addr == 0x4016) // Controllers registers
+		_refresh_controller = value & 1;
+	else if(addr < 0x4018) // APU registers
 		apu->write(addr - 0x4000, value);
-	else if(addr < 0x4020) // Controllers registers
-		(void) 0; /// @todo
 	else {
 		error << "Error: Write addr " << Hexa(addr) << " out of bounds." << std::endl;
 		exit(1);

@@ -18,6 +18,14 @@ struct color_t
 { 
 	word_t r, g, b, a;
 	
+	color_t(word_t _r = 255, word_t _g = 255, word_t _b = 255, word_t _a = 255) :
+		r(_r),
+		g(_g),
+		b(_b),
+		a(_a)
+	{
+	}
+	
 	color_t& operator=(const color_t& v) =default;
 	bool operator==(const color_t& v)
 	{

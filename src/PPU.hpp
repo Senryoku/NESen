@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <fstream>
 
 #include "Common.hpp"
 #include "Cartridge.hpp"
@@ -65,6 +66,28 @@ public:
 		delete[] _screen;
 		delete[] _oam;
 		delete[] _mem;
+	}
+	
+	bool load_palette(const std::string& path)
+	{
+		std::ifstream pal_file(path, std::ios::binary);
+		if(!pal_file)
+		{
+			std::cerr << "Error: Couldn't load palette at '" << path << "'." << std::endl;
+			return false;
+		} else {
+			word_t r, b, g;
+			size_t c = 0;
+			while(pal_file)
+			{
+				pal_file >> r;
+				pal_file >> g;
+				pal_file >> b;
+				rgb_palette[c] = color_t(r, g, b);
+				++c;
+			}
+			return true;
+		}
 	}
 	
 	void reset()
@@ -142,6 +165,14 @@ public:
 	{
 		return _screen;
 	}
+
+	color_t rgb_palette[0x40]
+	= {
+		color_t(84, 84, 84),	color_t(0, 30, 116),	color_t(8, 16, 144),	color_t(48, 0, 136),	color_t(68, 0, 100),	color_t(92, 0, 48),		color_t(84, 4, 0),		color_t(60, 24, 0),		color_t(32, 42, 0),		color_t(8, 58, 0), 		color_t(0, 64, 0), 		color_t(0, 60, 0), 		color_t(0, 50, 60), 	color_t(0, 0, 0), 		color_t(0, 0, 0), color_t(0, 0, 0),
+		color_t(152, 150, 152),	color_t(8, 76, 196),	color_t(48, 50, 236),	color_t(92, 30, 228),	color_t(136, 20, 176),	color_t(160, 20, 100),	color_t(152, 34, 32),	color_t(120, 60, 0), 	color_t(84, 90, 0), 	color_t(40, 114, 0), 	color_t(8, 124, 0), 	color_t(0, 118, 40), 	color_t(0, 102, 120), 	color_t(0, 0, 0), 		color_t(0, 0, 0), color_t(0, 0, 0),
+		color_t(236, 238, 236),	color_t(76, 154, 236),	color_t(120, 124, 236),	color_t(176, 98, 236),	color_t(228, 84, 236),	color_t(236, 88, 180),	color_t(236, 106, 100),	color_t(212, 136, 32), 	color_t(160, 170, 0), 	color_t(116, 196, 0), 	color_t(76, 208, 32), 	color_t(56, 204, 108), 	color_t(56, 180, 204), 	color_t(60, 60, 60), 	color_t(0, 0, 0), color_t(0, 0, 0),
+		color_t(236, 238, 36),	color_t(168, 204, 236),	color_t(188, 188, 236),	color_t(212, 178, 236),	color_t(236, 174, 236),	color_t(236, 174, 212),	color_t(236, 180, 176),	color_t(228, 196, 144), color_t(204, 210, 120), color_t(180, 222, 120), color_t(168, 226, 144), color_t(152, 226, 180), color_t(160, 214, 228), color_t(160, 162, 160), color_t(0, 0, 0), color_t(0, 0, 0)
+	};
 	
 	void step(size_t cpu_cycles)
 	{
@@ -159,10 +190,20 @@ public:
 				word_t y = (_scroll_y + _line) & 7;
 				word_t sprite_pixel = _scroll_x & 7;
 				addr_t nametable = 0x2000 + 0x400 * (_ppu_control & NameTableAddress);
-				//addr_t attributetable = 0x23C0 + 0x400 * (_ppu_control & NameTableAddress);
+				addr_t attributetable = nametable + 0x03C0;
 				addr_t patterns = (_ppu_control & BackgoundPatternTableAddress) ? 0x1000 : 0;
 				nametable += 32 * ((_scroll_y + _line) >> 3);
-				//word_t palette = 0;
+				attributetable += 8 * ((_scroll_y + _line) >> 5);
+				word_t attribute = 0;
+				color_t	color_cache[4][3]; // 4 palettes of 3 colors each 
+				bool background_transparency[ScreenWidth];
+				for(int i = 0; i < 4; ++i)
+					for(int j = 0; j < 3; ++j)
+					{
+						word_t val = _mem[0x3F01 + 4 * i + j];
+						color_cache[i][j] = rgb_palette[val & 0x7F];
+					}
+				bool top = ((_scroll_y + _line) % 32 < 16);
 				for(size_t x = 0; x < ScreenWidth; ++x)
 				{
 					// Fetch Tile Data
@@ -173,12 +214,28 @@ public:
 						tile_l = read(patterns + t * 16 + y);
 						tile_h = read(patterns + t * 16 + y + 8);
 						palette_translation(tile_l, tile_h, tile_data0, tile_data1);
+						
+						attribute = _mem[attributetable + ((x + _scroll_x) >> 5)];
+						bool left = ((x + _scroll_x) % 32 < 16);
+						if(top && !left)
+							attribute = attribute >> 2;
+						else if(!top && left)
+							attribute = attribute >> 4;
+						else if(!top && !left)
+							attribute = attribute >> 6;
+						attribute &= 3;
 					}
 
 					word_t shift = ((7 - sprite_pixel) % 4) * 2;
 					word_t color = ((sprite_pixel > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
-					/// @todo Palette
-					_screen[_line * ScreenWidth + x] = color * 64;
+					if(color > 0)
+					{
+						background_transparency[x] = false;
+						_screen[_line * ScreenWidth + x] = color_cache[attribute][color - 1];
+					} else {
+						background_transparency[x] = true;
+						_screen[_line * ScreenWidth + x] = 0;
+					}
 					++sprite_pixel;
 				}
 			}

@@ -2,8 +2,7 @@
 
 #include <cstring> // memset
 #include <iostream>
-#include <sstream>
-#include <iomanip>
+#include <functional>
 #include <stdlib.h>
 
 #include "Log.hpp"
@@ -22,7 +21,9 @@
 **/
 class CPU
 {
-public:	
+public:
+	using callback_t = std::function<bool()>;
+
 	static constexpr addr_t RAMSize = 0x0800;
 	static constexpr size_t ClockRate = 1789773; // Hz
 	
@@ -32,6 +33,10 @@ public:
 	Cartridge*		cartridge = nullptr;
 	PPU*			ppu = nullptr;
 	APU*			apu = nullptr;
+	
+	/// In order: A, B, Select, Start, Up, Down, Left, Right
+	callback_t	controller_callbacks[8];
+	callback_t	controller2_callbacks[8];
 	
 	CPU();
 	~CPU();
@@ -46,8 +51,8 @@ public:
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	// Memory access
-	inline word_t read(addr_t addr) const;
-	inline addr_t read16(addr_t addr) const;
+	inline word_t read(addr_t addr);
+	inline addr_t read16(addr_t addr);
 	inline void write(addr_t addr, word_t value);
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -93,9 +98,9 @@ public:
 	inline word_t get_sp() const { return _reg_sp; }
 	inline word_t get_ps() const { return _reg_ps; }
 	
-	inline word_t get_next_opcode() const { return read(_reg_pc); }
-	inline word_t get_next_operand0() const { return read(_reg_pc + 1); }
-	inline word_t get_next_operand1() const { return read(_reg_pc + 2); }
+	inline word_t get_next_opcode() { return read(_reg_pc); }
+	inline word_t get_next_operand0() { return read(_reg_pc + 1); }
+	inline word_t get_next_operand1() { return read(_reg_pc + 2); }
 	
 	inline size_t get_cycles() const { return _cycles; }
 	
@@ -116,7 +121,13 @@ private:
 	// Memory
 	word_t*		_ram;		///< RAM
 	
-	bool		_shutdown = false;
+	bool		_refresh_controller = false;
+	bool		_controller_states[8] = {false};
+	bool		_controller2_states[8] = {false};
+	size_t		_current_controller_read = 0;
+	void refresh_controller_states();
+	word_t read_controller_state();
+	word_t read_controller2_state();
 	
 	std::ifstream	_test_file;
 	

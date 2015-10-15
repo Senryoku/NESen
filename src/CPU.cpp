@@ -82,10 +82,43 @@ void CPU::step()
 		//log << "NMI caused a jump to " << Hexa(_reg_pc) << std::endl;
 	}
 	
+	if(_refresh_controller)
+		refresh_controller_states();
+	
 	word_t opcode = read(_reg_pc++);
 	execute(opcode);
 }
 
+void CPU::refresh_controller_states()
+{
+	_current_controller_read = 0;
+	for(size_t i = 0; i < 8; ++i)
+		_controller_states[i] = controller_callbacks[i] ? controller_callbacks[i]() : false;
+	for(size_t i = 0; i < 8; ++i)
+		_controller2_states[i] = controller2_callbacks[i] ? controller2_callbacks[i]() : false;
+}
+
+word_t CPU::read_controller_state()
+{
+	word_t r = 0x40;
+	if(_current_controller_read < 8)
+		r |= (_controller_states[_current_controller_read] & 1);
+	else
+		r = 0x41;
+	++_current_controller_read;
+	return r;
+}
+
+word_t CPU::read_controller2_state()
+{
+	word_t r = 0x40;
+	if(_current_controller_read < 8)
+		r |= (_controller2_states[_current_controller_read] & 1);
+	else
+		r = 0x41;
+	++_current_controller_read;
+	return r;
+}
 
 void CPU::regression_test()
 {
