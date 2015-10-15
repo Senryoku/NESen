@@ -44,6 +44,17 @@ size_t	CPU::instr_cycles[0x100] = {
 //  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
 };
 
+	
+CPU::CPU() :
+	_ram(new word_t[RAMSize])
+{
+}
+
+CPU::~CPU()
+{
+	delete _ram;
+}
+	
 void CPU::set_test_log(const std::string& path)
 {
 	_test_file.open(path, std::ios::binary);
@@ -61,10 +72,23 @@ void CPU::reset()
 	
 void CPU::step()
 {
-	//std::cout << std::hex << _reg_pc << std::endl;
-		
-	///////////////
-	// TESTING
+	regression_test();
+	
+	if(ppu->check_nmi())
+	{
+		push16(_reg_pc);
+		push(_reg_ps | 0b00100000);
+		_reg_pc = read16(0xFFFA);
+		//log << "NMI caused a jump to " << Hexa(_reg_pc) << std::endl;
+	}
+	
+	word_t opcode = read(_reg_pc++);
+	execute(opcode);
+}
+
+
+void CPU::regression_test()
+{
 	if(_test_file.is_open())
 	{
 		static int instr_count = 0;
@@ -99,17 +123,6 @@ void CPU::step()
 											<< " SP:" << Hexa(_reg_sp) << std::endl;
 		}
 	}
-	
-	if(ppu->check_nmi())
-	{
-		push16(_reg_pc);
-		push(_reg_ps | 0b00100000);
-		_reg_pc = read16(0xFFFA);
-		//log << "NMI caused a jump to " << Hexa(_reg_pc) << std::endl;
-	}
-	
-	word_t opcode = read(_reg_pc++);
-	execute(opcode);
 }
 
 #define OP(C,O,A) case C: O(A()); /* log << Hexa(_reg_pc) << " " #C " " #O " " #A << std::endl; */ break;

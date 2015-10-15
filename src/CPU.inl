@@ -56,6 +56,15 @@ void CPU::write(addr_t addr, word_t value)
 	}
 }
 
+void CPU::oam_dma(word_t value)
+{
+	/// @todo Timing: Takes 513 or 514 (if on an odd cycle) Cycles
+	ppu->write(0x2003, 0x00); // Reset OAMADDR
+	addr_t start = (value << 8);
+	for(addr_t a = 0; a < 256; ++a)
+		ppu->write(0x2004, _ram[start + a]);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Stack
 
@@ -134,6 +143,9 @@ inline void CPU::set_neg_zero(word_t operand)
 	set_neg(operand);
 	set_zero(operand);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+// Addressing modes
 
 inline addr_t CPU::addr_immediate()
 {

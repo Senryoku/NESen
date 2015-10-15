@@ -10,26 +10,33 @@ bool debug = true;
 bool step = true;
 
 addr_t nametable_addr = 0x2000;
+bool background_pattern = false;
 
 int main(int argc, char* argv[])
 {
+	NES nes;
 	std::string path = "tests/Ice Climber (USA, Europe).nes";
 	
-	if(argc > 1)
+	bool regression_test = false; /// @todo Cmd line
+	// For nestest.nes, don't forget to set PC at C000.
+	if(regression_test)
+	{
+		path = "tests/nestest.nes";
+		nes.cpu.set_test_log("tests/nestest_addr.log");
+	} else if(argc > 1) {
 		path = argv[1];
+	}
 	
-	NES nes;
 	if(!nes.load(path))
 	{
 		std::cerr << "Error loading '" << path << "'. Exiting..." << std::endl;
 		return 0;
 	}
 	
-	// For nestest.nes, don't forget to set PC at C000.
-	//nes.cpu.set_test_log("tests/nestest_addr.log");
-	
 	nes.reset();
-	
+	if(regression_test)
+		nes.cpu.set_pc(0xC000);
+		
 	float screen_scale = 2.0f;
 	
 	size_t padding = 200;
@@ -102,6 +109,7 @@ int main(int argc, char* argv[])
 					case sf::Keyboard::Escape: window.close(); break;
 					case sf::Keyboard::Return: debug = !debug; break;
 					case sf::Keyboard::Space: step = true; break;
+					case sf::Keyboard::B: background_pattern = !background_pattern; break; 
 					case sf::Keyboard::N: 
 						nametable_addr = 0x2000 + ((nametable_addr + 0x400) % 0x1000); 
 						std::cout << "Nametable: " << Hexa(nametable_addr) << std::endl; 
@@ -160,8 +168,8 @@ int main(int argc, char* argv[])
 					//std::cout << " n: " << Hexa8(n) << " t: " << Hexa8(t) << std::endl;
 					for(int y = 0; y < 8; ++y)
 					{
-						tile_l = nes.ppu.read(t * 16 + y);
-						tile_h = nes.ppu.read(t * 16 + y + 8);
+						tile_l = nes.ppu.read(0x1000 * background_pattern + t * 16 + y);
+						tile_h = nes.ppu.read(0x1000 * background_pattern + t * 16 + y + 8);
 						PPU::palette_translation(tile_l, tile_h, tile_data0, tile_data1);
 						for(int x = 0; x < 8; ++x)
 						{

@@ -29,23 +29,17 @@ public:
 	static Log log;
 	static Log error;
 	
-	Cartridge*		cartridge;
-	PPU*			ppu;
-	APU*			apu;
+	Cartridge*		cartridge = nullptr;
+	PPU*			ppu = nullptr;
+	APU*			apu = nullptr;
 	
-	CPU() :
-		_ram(new word_t[RAMSize])
-	{
-	}
-	
-	~CPU()
-	{
-		delete _ram;
-	}
+	CPU();
+	~CPU();
 	
 	void reset();
 	
 	void set_test_log(const std::string& path);
+	void regression_test();
 	
 	void step();	
 	void execute(word_t opcode);
@@ -90,6 +84,8 @@ public:
 	inline void set_neg_zero(word_t operand);
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	inline void set_pc(addr_t addr) { _reg_pc = addr; }
+	
 	inline addr_t get_pc() const { return _reg_pc; }
 	inline word_t get_acc() const { return _reg_acc; }
 	inline word_t get_x() const { return _reg_x; }
@@ -124,16 +120,9 @@ private:
 	
 	std::ifstream	_test_file;
 	
-	void oam_dma(word_t value)
-	{
-		// Takes 513 or 514 (if on an odd cycle) Cycles
-		ppu->write(0x2003, 0x00); // Reset OAMADDR
-		addr_t start = (value << 8);
-		for(addr_t a = 0; a < 256; ++a)
-			ppu->write(0x2004, _ram[start + a]);
-	}
+	inline void oam_dma(word_t value);
 	
-	#include "CPUInstr.inl"
+	#include "CPUInstr.inl" // Instruction implementation
 	
 	// Addressing Modes
 	
