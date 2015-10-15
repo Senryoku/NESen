@@ -52,10 +52,8 @@ void CPU::write(addr_t addr, word_t value)
 		_refresh_controller = value & 1;
 	else if(addr < 0x4018) // APU registers
 		apu->write(addr - 0x4000, value);
-	else {
-		error << "Error: Write addr " << Hexa(addr) << " out of bounds." << std::endl;
-		exit(1);
-	}
+	else
+		cartridge->write(addr, value);
 }
 
 void CPU::oam_dma(word_t value)

@@ -222,8 +222,8 @@ int main(int argc, char* argv[])
 				speed_mesure_cycles = 0;
 				
 				std::stringstream dt;
-				dt << "Speed " << std::dec << std::fixed << std::setw(4) << std::setprecision(1) << speed << "%";
-				window.setTitle(std::string("NESen - ").append(dt.str()));
+				dt << "NESen - Speed " << std::dec << std::fixed << std::setw(4) << std::setprecision(1) << speed << "%";
+				window.setTitle(dt.str());
 				debug_text.setString(dt.str());
 			}
 			

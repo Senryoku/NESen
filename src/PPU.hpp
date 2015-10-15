@@ -162,8 +162,12 @@ public:
 			break;
 			case 0x07:
 				_mem[_ppu_addr] = value;
-				//std::cout << "PPU Write: " << Hexa(_ppu_addr) << " = " << Hexa8(value) << std::endl;
+				// Horizontal Mirroring
+				//_mem[_ppu_addr + 0x400] = value;
+				// Vertical Mirroring
+				//_mem[_ppu_addr + 0x800] = value;
 				_ppu_addr += (_ppu_control & VerticalWrite) ? 32 : 1;
+				//std::cout << "PPU Write: " << Hexa(_ppu_addr) << " = " << Hexa8(value) << std::endl;
 			break;
 			default:
 				std::cerr << "Write on unsupported PPU address: " << Hexa(addr) << std::endl;
