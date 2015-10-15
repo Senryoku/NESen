@@ -25,7 +25,8 @@ public:
 	using callback_t = std::function<bool()>;
 
 	static constexpr addr_t RAMSize = 0x0800;
-	static constexpr size_t ClockRate = 1789773; // Hz
+	static constexpr size_t ClockRate = 1789773;	// NTSC, Hz
+	//static constexpr size_t ClockRate = 1662607;	// PAL, Hz
 	
 	static Log log;
 	static Log error;

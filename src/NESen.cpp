@@ -5,26 +5,41 @@
 #include <SFML/Graphics.hpp>
 
 #include "NES.hpp"
+#include "Common.hpp"
+#include "CommandLine.hpp"
 
-bool debug = true;
+bool debug = false;
 bool step = true;
+bool real_speed = true;
 
+// Timing
+sf::Clock timing_clock;
+double frame_time = 0;
+size_t speed_update = 10;
+double speed = 100;
+uint64_t elapsed_cycles = 0;
+uint64_t speed_mesure_cycles = 0;
+size_t frame_count = 0;
+
+// Debug Display
 addr_t nametable_addr = 0x2000;
 bool background_pattern = false;
 
 int main(int argc, char* argv[])
 {
-	NES nes;
-	std::string path = "tests/Ice Climber (USA, Europe).nes";
+	config::set_folder(argv[0]);
 	
-	bool regression_test = false; /// @todo Cmd line
-	// For nestest.nes, don't forget to set PC at C000.
+	NES nes;
+	std::string path = config::to_abs("tests/Ice Climber (USA, Europe).nes");
+	
+	bool regression_test = has_option(argc, argv, "-r");
 	if(regression_test)
 	{
-		path = "tests/nestest.nes";
-		nes.cpu.set_test_log("tests/nestest_addr.log");
-	} else if(argc > 1) {
-		path = argv[1];
+		debug = false;
+		path = config::to_abs("tests/nestest.nes");
+		nes.cpu.set_test_log(config::to_abs("tests/nestest_addr.log"));
+	} else if(get_file(argc, argv)) {
+		path = get_file(argc, argv);
 	}
 	
 	if(!nes.load(path))
@@ -128,12 +143,18 @@ int main(int argc, char* argv[])
 			}
 		}
 		
+		double nes_time = double(elapsed_cycles) / nes.cpu.ClockRate;
+		double diff = nes_time - timing_clock.getElapsedTime().asSeconds();
+		if(real_speed && !debug && diff > 0)
+			sf::sleep(sf::seconds(diff));
 		if(!debug || step)
 		{
 			step = false;
 			do
 			{
 				nes.step();
+				elapsed_cycles += nes.cpu.get_cycles();
+				speed_mesure_cycles += nes.cpu.get_cycles();
 			} while(!debug && !nes.ppu.completed_frame);
 		
 			// Update screen
@@ -190,6 +211,20 @@ int main(int argc, char* argv[])
 					}
 				}
 				nes_nametable.update(reinterpret_cast<uint8_t*>(nametable));
+			}
+			
+			if(--speed_update == 0)
+			{
+				speed_update = 10;
+				double t = timing_clock.getElapsedTime().asSeconds();
+				speed = 100.0 * (double(speed_mesure_cycles) / nes.cpu.ClockRate) / (t - frame_time);
+				frame_time = t;
+				speed_mesure_cycles = 0;
+				
+				std::stringstream dt;
+				dt << "Speed " << std::dec << std::fixed << std::setw(4) << std::setprecision(1) << speed << "%";
+				window.setTitle(std::string("NESen - ").append(dt.str()));
+				debug_text.setString(dt.str());
 			}
 			
 			if(true)

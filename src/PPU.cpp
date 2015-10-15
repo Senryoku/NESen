@@ -121,7 +121,7 @@ void PPU::step(size_t cpu_cycles)
 			}
 		}
 
-		_line = (_line + 1) % 260;
+		_line = (_line + 1) % 261;
 		// VBlank at 241
 		if(_line == 241)
 		{
