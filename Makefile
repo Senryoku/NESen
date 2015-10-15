@@ -239,6 +239,30 @@ src/NESen.cpp.s:
 	$(MAKE) -f CMakeFiles\NESen.dir\build.make CMakeFiles/NESen.dir/src/NESen.cpp.s
 .PHONY : src/NESen.cpp.s
 
+src/PPU.obj: src/PPU.cpp.obj
+.PHONY : src/PPU.obj
+
+# target to build an object file
+src/PPU.cpp.obj:
+	$(MAKE) -f CMakeFiles\NESen.dir\build.make CMakeFiles/NESen.dir/src/PPU.cpp.obj
+.PHONY : src/PPU.cpp.obj
+
+src/PPU.i: src/PPU.cpp.i
+.PHONY : src/PPU.i
+
+# target to preprocess a source file
+src/PPU.cpp.i:
+	$(MAKE) -f CMakeFiles\NESen.dir\build.make CMakeFiles/NESen.dir/src/PPU.cpp.i
+.PHONY : src/PPU.cpp.i
+
+src/PPU.s: src/PPU.cpp.s
+.PHONY : src/PPU.s
+
+# target to generate assembly for a file
+src/PPU.cpp.s:
+	$(MAKE) -f CMakeFiles\NESen.dir\build.make CMakeFiles/NESen.dir/src/PPU.cpp.s
+.PHONY : src/PPU.cpp.s
+
 # Help Target
 help:
 	@echo The following are some of the valid targets for this Makefile:
@@ -262,6 +286,9 @@ help:
 	@echo ... src/NESen.obj
 	@echo ... src/NESen.i
 	@echo ... src/NESen.s
+	@echo ... src/PPU.obj
+	@echo ... src/PPU.i
+	@echo ... src/PPU.s
 .PHONY : help
 
 

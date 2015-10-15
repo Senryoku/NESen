@@ -5,10 +5,10 @@
 class NES
 {
 public:
-	CPU cpu;
-	APU apu;
-	PPU ppu;
-	Cartridge cartridge;
+	CPU			cpu;
+	APU			apu;
+	PPU			ppu;
+	Cartridge 	cartridge;
 	
 	NES()
 	{

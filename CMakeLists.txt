@@ -15,8 +15,9 @@ SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --std=c++11 -Wall")
 # Define sources and executable
 set(EXECUTABLE_NAME "NESen")
 set(SOURCES
-	src/CPU.cpp
 	src/Common.cpp
+	src/CPU.cpp
+	src/PPU.cpp
 	src/NESen.cpp
 )
 add_executable(${EXECUTABLE_NAME} ${SOURCES})
