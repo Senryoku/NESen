@@ -63,48 +63,15 @@ public:
 	
 	Cartridge* cartridge = nullptr;
 	
-	PPU() :
-		_mem(new word_t[MemSize]),
-		_oam(new word_t[OAMSize]),
-		_screen(new color_t[240 * 256])
-	{
-		reset();
-	}
+	bool completed_frame = false;
+	inline const color_t* get_screen() const { return _screen; }
+	inline word_t get_mem(addr_t addr) const { return _mem[addr]; }
 	
-	~PPU()
-	{
-		delete[] _screen;
-		delete[] _oam;
-		delete[] _mem;
-	}
-	
-	bool load_palette(const std::string& path)
-	{
-		std::ifstream pal_file(path, std::ios::binary);
-		if(!pal_file)
-		{
-			std::cerr << "Error: Couldn't load palette at '" << path << "'." << std::endl;
-			return false;
-		} else {
-			word_t r, b, g;
-			size_t c = 0;
-			while(pal_file)
-			{
-				pal_file >> r;
-				pal_file >> g;
-				pal_file >> b;
-				rgb_palette[c] = color_t(r, g, b);
-				++c;
-			}
-			return true;
-		}
-	}
-	
-	void reset()
-	{
-		std::memset(_screen, 0, 240 * 256);
-		std::memset(_mem, 0, MemSize);
-	}
+	PPU();
+	~PPU();
+	bool load_palette(const std::string& path);
+	void reset();
+	void step(size_t cpu_cycles);
 	
 	/// Access for CPU
 	inline word_t read(addr_t addr)
@@ -175,22 +142,22 @@ public:
 		}
 	}
 	
-	inline const color_t* get_screen() const
+	inline bool check_nmi()
 	{
-		return _screen;
+		bool r = _nmi;
+		_nmi = false;
+		return r;
 	}
-
-	color_t rgb_palette[0x40]
-	= {
+	
+	
+	color_t rgb_palette[0x40] = {
 		color_t(84, 84, 84),	color_t(0, 30, 116),	color_t(8, 16, 144),	color_t(48, 0, 136),	color_t(68, 0, 100),	color_t(92, 0, 48),		color_t(84, 4, 0),		color_t(60, 24, 0),		color_t(32, 42, 0),		color_t(8, 58, 0), 		color_t(0, 64, 0), 		color_t(0, 60, 0), 		color_t(0, 50, 60), 	color_t(0, 0, 0), 		color_t(0, 0, 0), color_t(0, 0, 0),
 		color_t(152, 150, 152),	color_t(8, 76, 196),	color_t(48, 50, 236),	color_t(92, 30, 228),	color_t(136, 20, 176),	color_t(160, 20, 100),	color_t(152, 34, 32),	color_t(120, 60, 0), 	color_t(84, 90, 0), 	color_t(40, 114, 0), 	color_t(8, 124, 0), 	color_t(0, 118, 40), 	color_t(0, 102, 120), 	color_t(0, 0, 0), 		color_t(0, 0, 0), color_t(0, 0, 0),
 		color_t(236, 238, 236),	color_t(76, 154, 236),	color_t(120, 124, 236),	color_t(176, 98, 236),	color_t(228, 84, 236),	color_t(236, 88, 180),	color_t(236, 106, 100),	color_t(212, 136, 32), 	color_t(160, 170, 0), 	color_t(116, 196, 0), 	color_t(76, 208, 32), 	color_t(56, 204, 108), 	color_t(56, 180, 204), 	color_t(60, 60, 60), 	color_t(0, 0, 0), color_t(0, 0, 0),
 		color_t(236, 238, 36),	color_t(168, 204, 236),	color_t(188, 188, 236),	color_t(212, 178, 236),	color_t(236, 174, 236),	color_t(236, 174, 212),	color_t(236, 180, 176),	color_t(228, 196, 144), color_t(204, 210, 120), color_t(180, 222, 120), color_t(168, 226, 144), color_t(152, 226, 180), color_t(160, 214, 228), color_t(160, 162, 160), color_t(0, 0, 0), color_t(0, 0, 0)
 	};
 	
-	void step(size_t cpu_cycles);
-	
-	static inline void palette_translation(word_t l, word_t h, word_t& r0, word_t& r1)
+	static inline void tile_translation(word_t l, word_t h, word_t& r0, word_t& r1)
 	{
 		r0 = r1 = 0;
 		for(int i = 0; i < 4; i++)
@@ -200,18 +167,7 @@ public:
 			r1 |= ((l & (1 << i)) << (2 * i - i)) | 
 					((h & (1 << i)) << (2 * i + 1 - i));
 	}
-	
-	bool completed_frame = false;
-	
-	inline bool check_nmi()
-	{
-		bool r = _nmi;
-		_nmi = false;
-		return r;
-	}
-	
-	inline word_t get_mem(addr_t addr) const { return _mem[addr]; }
-	
+
 private:
 	unsigned int _cycles = 0;
 	unsigned int _frame = 0;

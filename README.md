@@ -7,6 +7,7 @@ WIP NES Emulator
 * ~~Controls~~
 * Complete memory mapping (and cartridge)
 * CPU
+  * IRQ
   * Page crossing timing (+1 if page boundery is crossed)
   * Branch instructions timing (if branch, +1 on same page, +2 on different page)
   * (Unofficial opcodes timing)

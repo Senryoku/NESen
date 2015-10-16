@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
 					{
 						tile_l = nes.ppu.read(t * 16 + y);
 						tile_h = nes.ppu.read(t * 16 + y + 8);
-						PPU::palette_translation(tile_l, tile_h, tile_data0, tile_data1);
+						PPU::tile_translation(tile_l, tile_h, tile_data0, tile_data1);
 						for(int x = 0; x < 8; ++x)
 						{
 							word_t shift = ((7 - x) % 4) * 2;
@@ -195,17 +195,16 @@ int main(int argc, char* argv[])
 				{
 					size_t tile_off = 8 * (n % 32) + (32 * 8 * 8) * (n / 32); 
 					word_t t = nes.ppu.get_mem(nametable_addr + n);
-					//std::cout << " n: " << Hexa8(n) << " t: " << Hexa8(t) << std::endl;
 					for(int y = 0; y < 8; ++y)
 					{
 						tile_l = nes.ppu.read(0x1000 * background_pattern + t * 16 + y);
 						tile_h = nes.ppu.read(0x1000 * background_pattern + t * 16 + y + 8);
-						PPU::palette_translation(tile_l, tile_h, tile_data0, tile_data1);
+						PPU::tile_translation(tile_l, tile_h, tile_data0, tile_data1);
 						for(int x = 0; x < 8; ++x)
 						{
 							word_t shift = ((7 - x) % 4) * 2;
 							word_t color = ((x > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
-							/// @Todo: Palettes
+							/// @Todo: Palettes?
 							nametable[tile_off + 32 * 8 * y + x] = color * 64;
 						}
 					}
@@ -249,12 +248,7 @@ int main(int argc, char* argv[])
 				if(nes.cpu.check(CPU::StateMask::Overflow)) dt << " O";
 				if(nes.cpu.check(CPU::StateMask::Negative)) dt << " N";
 				dt << std::endl;
-				/*
-				dt << "LY: " << Hexa8(gpu.getLine());
-				dt << " LCDC: " << Hexa8(gpu.getLCDControl());
-				dt << " STAT: " << Hexa8(gpu.getLCDStatus());
-				dt << " P1: " << Hexa8(mmu.read(MMU::P1));
-				*/
+				
 				debug_text.setString(dt.str());
 			}
 		}

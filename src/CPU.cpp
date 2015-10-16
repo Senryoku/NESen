@@ -63,7 +63,6 @@ void CPU::set_test_log(const std::string& path)
 void CPU::reset()
 {
 	_reg_pc = read(0xFFFC) | (read(0xFFFD) << 8);
-	//_reg_pc = 0xC000; log << "Warning: Starting with PC = 0xC000" << std::endl; /// @TODO Remove (here for nestest.nes)
 	_reg_sp = 0xFD; /// @TODO: Check
 	_reg_ps = 0x34; /// @TODO: Check
 	_reg_acc = _reg_x = _reg_y = 0x00;
@@ -78,8 +77,17 @@ void CPU::step()
 	{
 		push16(_reg_pc);
 		push(_reg_ps | 0b00100000);
+		_reg_ps |= Interrupt;
 		_reg_pc = read16(0xFFFA);
-		//log << "NMI caused a jump to " << Hexa(_reg_pc) << std::endl;
+	}
+	
+	if(!(_reg_ps & Interrupt) && _irq)
+	{
+		_irq = false;
+		push16(_reg_pc);
+		push(_reg_ps | 0b00100000);
+		_reg_ps |= Interrupt;
+		_reg_pc = read16(0xFFFE);
 	}
 	
 	if(_refresh_controller)

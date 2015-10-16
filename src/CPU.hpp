@@ -50,6 +50,9 @@ public:
 	void step();	
 	void execute(word_t opcode);
 	
+	// Request an interruption.
+	inline void irq() { _irq = true; }
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	// Memory access
 	inline word_t read(addr_t addr);
@@ -116,6 +119,8 @@ private:
 	word_t		_reg_y		= 0x00;		///< Y Register
 	word_t		_reg_sp		= 0x00;		///< Stack Pointer
 	word_t		_reg_ps		= 0x00;		///< Processor Status
+	
+	bool		_irq		= false;
 	
 	unsigned int	_cycles = 0;
 	

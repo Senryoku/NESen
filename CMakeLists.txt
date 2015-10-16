@@ -5,8 +5,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "")
   set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-set(NESen 1)
-set(NESen 0)
+set(NESen_VERSION_MINOR 2)
+set(NESen_VERSION_MAJOR 0)
 include_directories("${PROJECT_BINARY_DIR}")
 include_directories("${CMAKE_SOURCE_DIR}/src")
 
@@ -14,12 +14,7 @@ SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --std=c++11 -Wall")
 
 # Define sources and executable
 set(EXECUTABLE_NAME "NESen")
-set(SOURCES
-	src/Common.cpp
-	src/CPU.cpp
-	src/PPU.cpp
-	src/NESen.cpp
-)
+aux_source_directory(src SOURCES)
 add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
 # Detect and add SFML

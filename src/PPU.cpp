@@ -1,5 +1,48 @@
 #include "PPU.hpp"
 
+PPU::PPU() :
+	_mem(new word_t[MemSize]),
+	_oam(new word_t[OAMSize]),
+	_screen(new color_t[240 * 256])
+{
+	reset();
+}
+
+PPU::~PPU()
+{
+	delete[] _screen;
+	delete[] _oam;
+	delete[] _mem;
+}
+	
+bool PPU::load_palette(const std::string& path)
+{
+	std::ifstream pal_file(path, std::ios::binary);
+	if(!pal_file)
+	{
+		std::cerr << "Error: Couldn't load palette at '" << path << "'." << std::endl;
+		return false;
+	} else {
+		word_t r, b, g;
+		size_t c = 0;
+		while(pal_file)
+		{
+			pal_file >> r;
+			pal_file >> g;
+			pal_file >> b;
+			rgb_palette[c] = color_t(r, g, b);
+			++c;
+		}
+		return true;
+	}
+}
+
+void PPU::reset()
+{
+	std::memset(_screen, 0, 240 * 256);
+	std::memset(_mem, 0, MemSize);
+}
+	
 void PPU::step(size_t cpu_cycles)
 {
 	completed_frame = false;
@@ -40,7 +83,7 @@ void PPU::step(size_t cpu_cycles)
 					sprite_pixel = sprite_pixel % 8;
 					tile_l = read(patterns + t * 16 + y);
 					tile_h = read(patterns + t * 16 + y + 8);
-					palette_translation(tile_l, tile_h, tile_data0, tile_data1);
+					tile_translation(tile_l, tile_h, tile_data0, tile_data1);
 					
 					attribute = _mem[attributetable + ((x + _scroll_x) >> 5)];
 					bool left = ((x + _scroll_x) % 32 < 16);
@@ -106,13 +149,16 @@ void PPU::step(size_t cpu_cycles)
 
 				tile_l = read(patterns + t * 16 + (y & 7));
 				tile_h = read(patterns + t * 16 + (y & 7) + 8);
-				palette_translation(tile_l, tile_h, tile_data0, tile_data1);
+				tile_translation(tile_l, tile_h, tile_data0, tile_data1);
 				
 				for(size_t p = 0; p < 8; ++p)
 				{
 					word_t c_x = (attribute & FlipX) ? (7 - p) : p;
 					word_t shift = ((7 - c_x) % 4) * 2;
 					word_t color = ((c_x > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
+					
+					if(s == 0 && color > 0 && !background_transparency[x + p]) _ppu_status |= Sprite0Hit;
+					
 					if(color > 0 && (!(attribute & Priority) || background_transparency[x + p]))
 					{
 						_screen[_line * ScreenWidth + x + p] = color_cache[attribute & Palette][color - 1];
@@ -121,11 +167,13 @@ void PPU::step(size_t cpu_cycles)
 			}
 		}
 
-		_line = (_line + 1) % 261;
-		// VBlank at 241
+		_line = (_line + 1) % 262;
+		// VBlank at 241 (to 260)
 		if(_line == 241)
 		{
 			_ppu_status |= VBlank;
+		} else if(_line == 261) { // Pre-render scanline (sometimes numbered -1)
+			_ppu_status &= ~Sprite0Hit;
 		} else if(_line == 0) {
 			completed_frame = true;
 			_ppu_status &= ~VBlank;

@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <iomanip>
+#include <cassert>
 
 using byte_t = char;
 using ubyte_t = uint8_t;
