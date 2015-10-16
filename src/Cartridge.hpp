@@ -13,11 +13,21 @@
 class Cartridge
 {
 public:
+	/// Nametables mirroring
+	enum Mirroring
+	{
+		Horizontal,
+		Vertical,
+		None		// Four Screens
+	};
+
 	Cartridge() =default;
 	Cartridge(const std::string& path);
 	~Cartridge();
 	
 	bool load(const std::string& path);
+	
+	inline Mirroring get_mirroring() const { return _mirrorring; }
 	
 	/// CPU Read
 	inline byte_t read(addr_t addr) const
@@ -47,6 +57,8 @@ public:
 	}
 
 private:
+	Mirroring	_mirrorring;
+
 	word_t	_control_register = 0;
 	word_t	_shift_register = 0;
 	size_t	_shift_register_writes = 0;

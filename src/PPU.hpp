@@ -73,7 +73,7 @@ public:
 	void reset();
 	void step(size_t cpu_cycles);
 	
-	/// Access for CPU
+	/// Access from CPU
 	inline word_t read(addr_t addr)
 	{
 		if(addr < 0x2000) // CHR ROM (Or re-routed by cartridge)
@@ -93,7 +93,16 @@ public:
 			case 0x04: return _oam[_oam_addr];
 			case 0x07: 
 			{
-				word_t r = _mem[_ppu_addr];
+				static word_t internal_buffer = 0;
+				word_t r;
+				if(_ppu_addr < 0x3F00)
+				{
+					r = internal_buffer;
+					internal_buffer = _mem[_ppu_addr];
+				} else {
+					r = _mem[_ppu_addr];
+					internal_buffer = _mem[_ppu_addr - 0x1F00];
+				}
 				_ppu_addr += (_ppu_control & VerticalWrite) ? 32 : 1;
 				return r;
 			}
@@ -129,10 +138,24 @@ public:
 			break;
 			case 0x07:
 				_mem[_ppu_addr] = value;
-				// Horizontal Mirroring
-				//_mem[_ppu_addr + 0x400] = value;
-				// Vertical Mirroring
-				//_mem[_ppu_addr + 0x800] = value;
+				/// Nametables range - Mirroring @todo Check...
+				if(_ppu_addr < 0x3F00)
+				{
+					if(_ppu_addr >= 0x3000)
+					{
+						_mem[_ppu_addr - 0x1000] = value;
+					} else if(cartridge->get_mirroring() == Cartridge::Horizontal) {
+						if(_ppu_addr < 0x2400 || (_ppu_addr >= 0x2800 && _ppu_addr < 0x2C00))
+							_mem[_ppu_addr + 0x400] = value;
+						else
+							_mem[_ppu_addr - 0x400] = value;
+					} else if(cartridge->get_mirroring() == Cartridge::Vertical) {
+						if(_ppu_addr < 0x2800)
+							_mem[_ppu_addr + 0x800] = value;
+						else
+							_mem[_ppu_addr - 0x800] = value;
+					}
+				}
 				_ppu_addr += (_ppu_control & VerticalWrite) ? 32 : 1;
 				//std::cout << "PPU Write: " << Hexa(_ppu_addr) << " = " << Hexa8(value) << std::endl;
 			break;

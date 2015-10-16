@@ -8,7 +8,9 @@ Core CPU Emulation is pretty much done, everything else are quick hacks.
 It runs Donkey Kong at an awkward speed, but that's about it. Next steps should be debugging (What's the matter with emulation speed? Why is Ice Climbers not working - at all?) and mappers implementation, but motivation is eluding me.
 
 ## Todo List
-* Debug (Speed; Crashing mapper 000 games)
+* Debug
+  * Speed
+  * Crashing mapper 000 games
 * ~~Controls~~
 * Complete memory mapping (and cartridge)
 * CPU
@@ -19,8 +21,10 @@ It runs Donkey Kong at an awkward speed, but that's about it. Next steps should 
   * (Some unofficial opcodes)
 * PPU
   * Nametable mapping/mirroring (via cartridge?)
+  * Palette 0 (Backdrop color), palettes 0x3F04/0x3F08/0x3F0C and mirror palettes
   * ~~Attributes (Color Palettes)~~
   * ~~Sprites~~
+  * (Correct Video Emulation?)
 * (GUI with wxWidget)
   
 ## Dependencies

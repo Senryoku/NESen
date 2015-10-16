@@ -22,8 +22,7 @@ uint64_t speed_mesure_cycles = 0;
 size_t frame_count = 0;
 
 // Debug Display
-addr_t nametable_addr = 0x2000;
-bool background_pattern = false;
+bool background_pattern = true;
 
 int main(int argc, char* argv[])
 {
@@ -90,18 +89,22 @@ int main(int argc, char* argv[])
 	color_t* tile_map = new color_t[tile_map_size];
 	std::memset(tile_map, 0, tile_map_size);
 	
-	sf::Texture	nes_nametable;
-	if(!nes_nametable.create(32 * 8, 30 * 8))
-		std::cerr << "Error creating the vram texture!" << std::endl;
-	sf::Sprite nes_nametable_sprite;
-	nes_nametable_sprite.setTexture(nes_nametable);
-	nes_nametable_sprite.setPosition(nes_tilemap_sprite.getPosition().x + 
-		nes_tilemap_sprite.getGlobalBounds().width + padding / 2, 
-		padding / 2);
-	nes_nametable_sprite.setScale(screen_scale, screen_scale);
+	sf::Texture	nes_nametable[4];
+	sf::Sprite nes_nametable_sprite[4];
+	color_t* nametable[4];
 	size_t nametable_size = 30 * 32 * 8 * 8;
-	color_t* nametable = new color_t[nametable_size];
-	std::memset(nametable, 0, nametable_size);
+	for(int i = 0; i < 4; ++i)
+	{
+		if(!nes_nametable[i].create(32 * 8, 30 * 8))
+			std::cerr << "Error creating the vram texture!" << std::endl;
+		nes_nametable_sprite[i].setTexture(nes_nametable[i]);
+		nes_nametable_sprite[i].setPosition(nes_tilemap_sprite.getPosition().x + 
+			nes_tilemap_sprite.getGlobalBounds().width + padding / 2 + (i % 2) * (5 + 128 * screen_scale), 
+			padding / 2 + (i / 2) * (5 + 120 * screen_scale));
+		nes_nametable_sprite[i].setScale(0.5 * screen_scale, 0.5 * screen_scale);
+		nametable[i] = new color_t[nametable_size];
+		std::memset(nametable[i], 0, nametable_size);
+	}
 	
 	sf::Font font;
 	if(!font.loadFromFile("data/Hack-Regular.ttf"))
@@ -133,11 +136,7 @@ int main(int argc, char* argv[])
 					case sf::Keyboard::Escape: window.close(); break;
 					case sf::Keyboard::Return: debug = !debug; break;
 					case sf::Keyboard::Space: step = true; break;
-					case sf::Keyboard::B: background_pattern = !background_pattern; break; 
-					case sf::Keyboard::N: 
-						nametable_addr = 0x2000 + ((nametable_addr + 0x400) % 0x1000); 
-						std::cout << "Nametable: " << Hexa(nametable_addr) << std::endl; 
-						break;
+					case sf::Keyboard::B: background_pattern = !background_pattern; break;
 					default: break;
 				}
 			}
@@ -187,6 +186,7 @@ int main(int argc, char* argv[])
 			}
 			
 			// Nametables
+			for(int i = 0; i < 4; ++i)
 			{
 				word_t tile_l;
 				word_t tile_h;
@@ -194,7 +194,7 @@ int main(int argc, char* argv[])
 				for(int n = 0; n < 32 * 30; ++n)
 				{
 					size_t tile_off = 8 * (n % 32) + (32 * 8 * 8) * (n / 32); 
-					word_t t = nes.ppu.get_mem(nametable_addr + n);
+					word_t t = nes.ppu.get_mem(0x2000 + i * 0x400 + n);
 					for(int y = 0; y < 8; ++y)
 					{
 						tile_l = nes.ppu.read(0x1000 * background_pattern + t * 16 + y);
@@ -205,11 +205,11 @@ int main(int argc, char* argv[])
 							word_t shift = ((7 - x) % 4) * 2;
 							word_t color = ((x > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
 							/// @Todo: Palettes?
-							nametable[tile_off + 32 * 8 * y + x] = color * 64;
+							nametable[i][tile_off + 32 * 8 * y + x] = color * 64;
 						}
 					}
 				}
-				nes_nametable.update(reinterpret_cast<uint8_t*>(nametable));
+				nes_nametable[i].update(reinterpret_cast<uint8_t*>(nametable[i]));
 			}
 			
 			if(--speed_update == 0)
@@ -256,7 +256,8 @@ int main(int argc, char* argv[])
 	    window.clear(sf::Color::Black);
 		window.draw(nes_screen_sprite);
 		window.draw(nes_tilemap_sprite);
-		window.draw(nes_nametable_sprite);
+		for(int i = 0; i < 4; ++i)
+			window.draw(nes_nametable_sprite[i]);
 		window.draw(debug_text);
 		window.draw(log_text);
         window.display();

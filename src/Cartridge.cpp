@@ -44,7 +44,12 @@ bool Cartridge::load(const std::string& path)
 		_trainer = new byte_t[512];
 		file.read(_trainer, 512);
 	}
-		
+	
+	if(flag6 & 0x8)
+		_mirrorring = None;
+	else
+		_mirrorring = (flag6 & 1) ? Vertical : Horizontal;
+	
 	_prg_rom = new byte_t[_prg_rom_size];
 	file.read(_prg_rom, _prg_rom_size);
 	
@@ -63,7 +68,8 @@ bool Cartridge::load(const std::string& path)
 	_mapper = ((flag6 & 0b11110000) >> 4) | (h[7] & 0b11110000);
 	
 	std::cout << "Loaded '" << path << "' successfully! " << std::endl << 
-				"> Mapper: " << _mapper << std::endl <<
+				"> Mapper: " << _mapper << ", Mirroring: " << 
+				((_mirrorring == None) ? "None" : (_mirrorring == Vertical ? "Vertical" : "Horizontal")) << std::endl <<
 				"> PRG Cartridge size: " << 16 * h[4] << "kB (" << _prg_rom_size << "B)" << std::endl <<
 				"> CHR Cartridge size: " << 8 * h[5] << "kB (" << _chr_rom_size << "B)" << std::endl <<
 				"> PRG RAM size: " << 8 * h[8] << "kB (" << _prg_ram_size << "B)" << std::endl;

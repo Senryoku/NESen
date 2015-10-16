@@ -79,13 +79,17 @@ void PPU::step(size_t cpu_cycles)
 				// Fetch Tile Data
 				if(sprite_pixel == 8 || x == 0)
 				{
-					t = _mem[nametable + ((x + _scroll_x) >> 3)];
+					addr_t tile_x = ((x + _scroll_x) >> 3);
+					if(tile_x >= 32) tile_x += 0x400 - 32;	// Next nametable
+					t = _mem[nametable + tile_x];
 					sprite_pixel = sprite_pixel % 8;
 					tile_l = read(patterns + t * 16 + y);
 					tile_h = read(patterns + t * 16 + y + 8);
 					tile_translation(tile_l, tile_h, tile_data0, tile_data1);
 					
-					attribute = _mem[attributetable + ((x + _scroll_x) >> 5)];
+					addr_t attribute_x = ((x + _scroll_x) >> 5);
+					if(attribute_x >= 8) attribute_x += 0x400 - 8;	// Next nametable
+					attribute = _mem[attributetable + attribute_x];
 					bool left = ((x + _scroll_x) % 32 < 16);
 					if(top && !left)
 						attribute = attribute >> 2;
@@ -171,7 +175,8 @@ void PPU::step(size_t cpu_cycles)
 		// VBlank at 241 (to 260)
 		if(_line == 241)
 		{
-			_ppu_status |= VBlank;
+			//if(_ppu_control & VBlankEnable) // Mmh ?
+				_ppu_status |= VBlank;
 		} else if(_line == 261) { // Pre-render scanline (sometimes numbered -1)
 			_ppu_status &= ~Sprite0Hit;
 		} else if(_line == 0) {
