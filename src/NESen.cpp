@@ -4,9 +4,8 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
-#include "NES.hpp"
-#include "Common.hpp"
-#include "CommandLine.hpp"
+#include <core/NES.hpp>
+#include <tools/CommandLine.hpp>
 
 bool debug = false;
 bool step = true;
@@ -29,27 +28,18 @@ int main(int argc, char* argv[])
 	config::set_folder(argv[0]);
 	
 	NES nes;
-	std::string path = config::to_abs("tests/Ice Climber (USA, Europe).nes");
+	std::string path = "tests/Super Mario Bros. (Europe) (Rev 0A).nes";
 	
-	bool regression_test = has_option(argc, argv, "-r");
-	if(regression_test)
-	{
-		debug = false;
-		path = config::to_abs("tests/nestest.nes");
-		nes.cpu.set_test_log(config::to_abs("tests/nestest_addr.log"));
-	} else if(get_file(argc, argv)) {
+	if(get_file(argc, argv))
 		path = get_file(argc, argv);
-	}
 	
 	if(!nes.load(path))
 	{
-		std::cerr << "Error loading '" << path << "'. Exiting..." << std::endl;
+		term::error("Error loading '", path, "'. Exiting...");
 		return 0;
 	}
 	
 	nes.reset();
-	if(regression_test)
-		nes.cpu.set_pc(0xC000);
 		
 	float screen_scale = 2.0f;
 	
@@ -137,6 +127,7 @@ int main(int argc, char* argv[])
 					case sf::Keyboard::Return: debug = !debug; break;
 					case sf::Keyboard::Space: step = true; break;
 					case sf::Keyboard::B: background_pattern = !background_pattern; break;
+					case sf::Keyboard::M: real_speed = !real_speed; break;
 					default: break;
 				}
 			}
