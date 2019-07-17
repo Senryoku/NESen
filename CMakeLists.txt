@@ -18,14 +18,12 @@ aux_source_directory("src/tools" SOURCES)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
 
 #dear imgui
-set(IMGUI_ROOT "ext/imgui")
-include_directories(${IMGUI_ROOT})
 set(ImGui-SFML_DIR "ext/imgui-sfml")
 include_directories(${ImGui-SFML_DIR})
 set(IMGUI_SOURCES
-	${IMGUI_ROOT}/imgui.cpp
-	${IMGUI_ROOT}/imgui_widgets.cpp
-	${IMGUI_ROOT}/imgui_draw.cpp
+	${ImGui-SFML_DIR}/imgui.cpp
+	${ImGui-SFML_DIR}/imgui_widgets.cpp
+	${ImGui-SFML_DIR}/imgui_draw.cpp
 	${ImGui-SFML_DIR}/imgui-SFML.cpp
 )
 
