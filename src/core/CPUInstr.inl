@@ -96,7 +96,7 @@ inline void brk()
 	push16(_reg_pc);
 	push(_reg_ps | 0b00110000);
 	_reg_pc = read16(0xFFFE);
-	term::log("BRK caused a jump to ", Hexa(_reg_pc));
+	Log::info("BRK caused a jump to ", Hexa(_reg_pc));
 }
 
 inline void bvc()

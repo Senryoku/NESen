@@ -26,7 +26,7 @@ word_t CPU::read(addr_t addr)
 	else if(addr <= 0xFFFF) // Cartridge
 		return cartridge->read(addr);
 	else {
-		term::error("Error: Read addr ", Hexa(addr), " out of bounds.");
+		Log::error("Error: Read addr ", Hexa(addr), " out of bounds.");
 		exit(1);
 	}
 }

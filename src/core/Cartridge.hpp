@@ -83,12 +83,12 @@ private:
 	
 	inline void read_error(addr_t addr) const
 	{
-		term::error("Error: Trying to read cartridge (mapper: ", _mapper ,") at address ", Hexa(addr));
+		Log::error("Error: Trying to read cartridge (mapper: ", _mapper ,") at address ", Hexa(addr));
 	}
 	
 	inline void write_error(addr_t addr, word_t val) const
 	{
-		term::error("Error: Trying to write value ", Hexa(val), " (", static_cast<char>(val),") to cartridge (mapper: ", _mapper, ") at address ", Hexa(addr));
+		Log::error("Error: Trying to write value ", Hexa(val), " (", static_cast<char>(val),") to cartridge (mapper: ", _mapper, ") at address ", Hexa(addr));
 	}
 	
 	std::function<byte_t(addr_t)> _mappers_read[0x100] = {
@@ -135,9 +135,9 @@ private:
 		[&] (addr_t addr, word_t value) -> void	// 001
 		{
 			if(addr < 0x1000) {        // PPU $0000-$0FFF: 4 KB switchable CHR bank
-				term::warn("Warning: Unimplemented, trying to write value ", Hexa(value), " (", static_cast<char>(value),") to cartridge (mapper: ", _mapper, ") at address ", Hexa(addr));
+				Log::warn("Warning: Unimplemented, trying to write value ", Hexa(value), " (", static_cast<char>(value),") to cartridge (mapper: ", _mapper, ") at address ", Hexa(addr));
 			} else if(addr < 0x2000) { // PPU $1000-$1FFF: 4 KB switchable CHR bank
-				term::warn("Warning: Unimplemented, trying to write value ", Hexa(value), " (", static_cast<char>(value),") to cartridge (mapper: ", _mapper, ") at address ", Hexa(addr));
+				Log::warn("Warning: Unimplemented, trying to write value ", Hexa(value), " (", static_cast<char>(value),") to cartridge (mapper: ", _mapper, ") at address ", Hexa(addr));
 			} else if(addr < 0x6000) { // Nothing
 				write_error(addr, value);
 			} else if(addr < 0x8000) { // CPU $6000-$7FFF: 8 KB PRG RAM bank, (optional)

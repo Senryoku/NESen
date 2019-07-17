@@ -4,6 +4,9 @@
 #include <SFML/Window.hpp>
 #include <SFML/Graphics.hpp>
 
+#include <imgui.h>
+#include <imgui-SFML.h>
+
 #include <core/NES.hpp>
 #include <tools/CommandLine.hpp>
 
@@ -23,19 +26,80 @@ size_t frame_count = 0;
 // Debug Display
 bool background_pattern = true;
 
+const std::vector<std::string> single_roms{
+	"01-basics.nes",
+	"02-implied.nes",
+	"03-immediate.nes",
+	"04-zero_page.nes",
+	"05-zp_xy.nes",
+	"06-absolute.nes",
+	"07-abs_xy.nes",
+	"08-ind_x.nes",
+	"09-ind_y.nes",
+	"10-branches.nes",
+	"11-stack.nes",
+	"12-jmp_jsr.nes",
+	"13-rts.nes",
+	"14-rti.nes",
+	"15-brk.nes",
+	"16-special.nes"
+};
+
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+int is_directory(const char *path) {
+   struct stat statbuf;
+   if (stat(path, &statbuf) != 0)
+       return 0;
+   return S_ISDIR(statbuf.st_mode);
+}
+
+std::string explore(const std::string& path) {
+	std::string r;
+	DIR *dir;
+	struct dirent *ent;
+	if ((dir = opendir (path.c_str())) != NULL) {
+		/* print all the files and directories within directory */
+		while ((ent = readdir (dir)) != NULL) {
+			if(ent->d_name == "." || ent->d_name == "..")
+				continue;
+			//printf ("%s\n", ent->d_name);
+			std::string tmp = path + ent->d_name;
+			if(is_directory(tmp.c_str())) {
+				if(ImGui::TreeNode(ent->d_name)) {
+					r = explore(tmp);
+					ImGui::TreePop();
+				}
+			} else {
+				if(ImGui::Button(ent->d_name)) {
+					return tmp;
+				}
+			}
+		}
+		closedir (dir);
+	} else {
+		/* could not open directory */
+		return nullptr;
+	}
+	return r;
+}
+
 int main(int argc, char* argv[])
 {
 	config::set_folder(argv[0]);
 	
 	NES nes;
-	std::string path = "tests/Super Mario Bros. (Europe) (Rev 0A).nes";
+	std::string path = "tests/instr_test-v5/rom_singles/01-basics.nes";
 	
 	if(get_file(argc, argv))
 		path = get_file(argc, argv);
 	
 	if(!nes.load(path))
 	{
-		term::error("Error loading '", path, "'. Exiting...");
+		Log::error("Error loading '", path, "'. Exiting...");
 		return 0;
 	}
 	
@@ -53,10 +117,11 @@ int main(int argc, char* argv[])
 	nes.cpu.controller_callbacks[7] = [&] () -> bool { for(int i = 0; i < sf::Joystick::Count; ++i) if(sf::Joystick::isConnected(i) && sf::Joystick::getAxisPosition(i, sf::Joystick::X) > 50) return true; return sf::Keyboard::isKeyPressed(sf::Keyboard::Right); };
 	
 	size_t padding = 200;
-	sf::RenderWindow window(sf::VideoMode(screen_scale * nes.ppu.ScreenWidth + 2 * padding + screen_scale * (16 * 8 + 32 * 8), 
+	sf::RenderWindow window(sf::VideoMode(screen_scale * nes.ppu.ScreenWidth + 2 * padding, 
 											screen_scale * nes.ppu.ScreenHeight + padding), 
 											"NESen");
 	window.setVerticalSyncEnabled(false);
+    ImGui::SFML::Init(window);
 	
 	sf::Texture	nes_screen;
 	if(!nes_screen.create(nes.ppu.ScreenWidth, nes.ppu.ScreenHeight))
@@ -69,54 +134,28 @@ int main(int argc, char* argv[])
 	sf::Texture	nes_tilemap;
 	if(!nes_tilemap.create(16 * 8, 2 * 16 * 8))
 		std::cerr << "Error creating the vram texture!" << std::endl;
-	sf::Sprite nes_tilemap_sprite;
-	nes_tilemap_sprite.setTexture(nes_tilemap);
-	nes_tilemap_sprite.setPosition(screen_scale * nes.ppu.ScreenWidth + padding, 
-		padding / 2);
-	nes_tilemap_sprite.setScale(screen_scale, screen_scale);
-	// 2 * (256 tiles * (8 * 8) bits per tile)
 	size_t tile_map_size = 2 * 256 * 8 * 8;
 	color_t* tile_map = new color_t[tile_map_size];
 	std::memset(tile_map, 0, tile_map_size);
 	
 	sf::Texture	nes_nametable[4];
-	sf::Sprite nes_nametable_sprite[4];
 	color_t* nametable[4];
 	size_t nametable_size = 30 * 32 * 8 * 8;
 	for(int i = 0; i < 4; ++i)
 	{
 		if(!nes_nametable[i].create(32 * 8, 30 * 8))
 			std::cerr << "Error creating the vram texture!" << std::endl;
-		nes_nametable_sprite[i].setTexture(nes_nametable[i]);
-		nes_nametable_sprite[i].setPosition(nes_tilemap_sprite.getPosition().x + 
-			nes_tilemap_sprite.getGlobalBounds().width + padding / 2 + (i % 2) * (5 + 128 * screen_scale), 
-			padding / 2 + (i / 2) * (5 + 120 * screen_scale));
-		nes_nametable_sprite[i].setScale(0.5 * screen_scale, 0.5 * screen_scale);
 		nametable[i] = new color_t[nametable_size];
 		std::memset(nametable[i], 0, nametable_size);
 	}
 	
-	sf::Font font;
-	if(!font.loadFromFile("data/Hack-Regular.ttf"))
-		std::cerr << "Error loading the font!" << std::endl;
-	
-	sf::Text debug_text;
-	debug_text.setFont(font);
-	debug_text.setCharacterSize(16);
-	debug_text.setPosition(5, 0);
-	
-	sf::Text log_text;
-	log_text.setFont(font);
-	log_text.setCharacterSize(16);
-	log_text.setPosition(5, 200 / 2 + 2 * nes.ppu.ScreenHeight);
-	log_text.setString("Log");
-	
-	//bool first_loop = true;
+	sf::Clock gui_delta_clock;
 	while (window.isOpen())
     {
         sf::Event event;
         while (window.pollEvent(event))
         {
+            ImGui::SFML::ProcessEvent(event);
             if (event.type == sf::Event::Closed)
                 window.close();
 			if (event.type == sf::Event::KeyPressed)
@@ -148,7 +187,6 @@ int main(int argc, char* argv[])
 			} while(!debug && !nes.ppu.completed_frame);
 		
 			// Update screen
-		
 			nes_screen.update(reinterpret_cast<const uint8_t*>(nes.ppu.get_screen()));
 			
 			// Debug display Tilemap
@@ -210,47 +248,106 @@ int main(int argc, char* argv[])
 				speed = 100.0 * (double(speed_mesure_cycles) / nes.cpu.ClockRate) / (t - frame_time);
 				frame_time = t;
 				speed_mesure_cycles = 0;
-				
-				std::stringstream dt;
-				dt << "NESen - Speed " << std::dec << std::fixed << std::setw(4) << std::setprecision(1) << speed << "%";
-				window.setTitle(dt.str());
-				debug_text.setString(dt.str());
-			}
-			
-			if(true)
-			{
-				std::stringstream dt;
-				dt << "PC: " << Hexa(nes.cpu.get_pc());
-				dt << " SP: " << Hexa(nes.cpu.get_sp());
-				dt << " | OP: " << Hexa8(nes.cpu.get_next_opcode()) << " ";
-				dt << Hexa8(nes.cpu.get_next_operand0()) << " ";
-				dt << Hexa8(nes.cpu.get_next_operand1());
-				dt << std::endl;
-				dt << "A: " << Hexa8(nes.cpu.get_acc());
-				dt << " X: " << Hexa8(nes.cpu.get_x());
-				dt << " Y: " << Hexa8(nes.cpu.get_y());
-				dt << " SP: " << Hexa8(nes.cpu.get_sp());
-				dt << " PS: " << Hexa8(nes.cpu.get_ps());
-				if(nes.cpu.check(CPU::StateMask::Carry)) dt << " C";
-				if(nes.cpu.check(CPU::StateMask::Zero)) dt << " Z";
-				if(nes.cpu.check(CPU::StateMask::Interrupt)) dt << " I";
-				if(nes.cpu.check(CPU::StateMask::Decimal)) dt << " D";
-				if(nes.cpu.check(CPU::StateMask::Break)) dt << " B";
-				if(nes.cpu.check(CPU::StateMask::Overflow)) dt << " O";
-				if(nes.cpu.check(CPU::StateMask::Negative)) dt << " N";
-				dt << std::endl;
-				
-				debug_text.setString(dt.str());
 			}
 		}
-		
+				
 	    window.clear(sf::Color::Black);
 		window.draw(nes_screen_sprite);
-		window.draw(nes_tilemap_sprite);
-		for(int i = 0; i < 4; ++i)
-			window.draw(nes_nametable_sprite[i]);
-		window.draw(debug_text);
-		window.draw(log_text);
+		
+		// GUI
+		ImGui::SFML::Update(window, gui_delta_clock.restart());
+		
+		ImGui::Begin("Controls");
+		const auto file_path = explore("./tests/");
+		if(file_path != "") {
+			if(!nes.load(file_path)) {
+				ImGui::Text("File not found.");
+			} else {
+				path = file_path;
+				nes.reset();
+			}
+		}
+		ImGui::End();
+		
+        ImGui::Begin("Instruction Tests");
+		auto test_status = nes.cpu.read(0x6000);
+		if(test_status == 0x80) {
+			ImGui::Text("Test running...");
+		} else {
+			char c;
+			int i = 0;
+			std::string msg;
+			do {
+				c = nes.cpu.read(0x6004 + i);
+				msg += c;
+				++i;
+			} while(c > 0 && i < 0x2000);
+			ImGui::Text("Finished with code 0x%02x and message:", test_status);
+			ImGui::Text("%s", msg.c_str());
+		}
+		/*
+		ImGui::Text("6001 0x%02x", nes.cpu.read(0x6001));
+		ImGui::Text("6002 0x%02x", nes.cpu.read(0x6002));
+		ImGui::Text("6003 0x%02x", nes.cpu.read(0x6003));
+        */
+		ImGui::Separator();
+		if(ImGui::Button("All Instructions")) {
+			nes.load("tests/instr_test-v5/all_instrs.nes");
+			nes.reset();
+		}
+		if(ImGui::Button("Official Instructions")) {
+			nes.load("tests/instr_test-v5/official_only.nes");
+			nes.reset();
+		}
+		ImGui::Text("Single ROMS");
+		for(const auto& s : single_roms) {
+			if(ImGui::Button(s.c_str())) {
+				nes.load("tests/instr_test-v5/rom_singles/"+s);
+				nes.reset();
+			}
+		}
+		ImGui::End();
+		
+        ImGui::Begin("NES Status");
+		ImGui::Text("Speed: %.2f\%%", speed);
+	
+		ImGui::Separator();
+		ImGui::BeginTabBar("Components");
+		
+		if(ImGui::BeginTabItem("CPU")) {
+			ImGui::Text("PC: 0x%04x", nes.cpu.get_pc());
+			ImGui::Text("SP: 0x%04x", nes.cpu.get_sp());
+			ImGui::Text("OP: 0x%02x 0x%02x 0x%02x", nes.cpu.get_next_opcode(), nes.cpu.get_next_operand0(), nes.cpu.get_next_operand1());
+			ImGui::Text("A: 0x%02x", nes.cpu.get_acc());
+			ImGui::Text("X: 0x%02x", nes.cpu.get_x());
+			ImGui::Text("Y: 0x%02x", nes.cpu.get_y());
+			ImGui::Text("PS: 0x%02x", nes.cpu.get_ps());
+            ImGui::Separator();
+			ImGui::Text("Flags");
+            ImGui::Separator();
+			ImGui::Value("Carry", nes.cpu.check(CPU::StateMask::Carry));
+			ImGui::Value("Zero", nes.cpu.check(CPU::StateMask::Zero));
+			ImGui::Value("Interrupt", nes.cpu.check(CPU::StateMask::Interrupt));
+			ImGui::Value("Decimal", nes.cpu.check(CPU::StateMask::Decimal));
+			ImGui::Value("Break", nes.cpu.check(CPU::StateMask::Break));
+			ImGui::Value("Overflow", nes.cpu.check(CPU::StateMask::Overflow));
+			ImGui::Value("Negative", nes.cpu.check(CPU::StateMask::Negative));
+			ImGui::EndTabItem();
+		}
+		
+		if(ImGui::BeginTabItem("PPU")) {
+			ImGui::Text("TileMap");
+			ImGui::Image(nes_tilemap);
+			ImGui::Text("NameTables");
+			for(int i = 0; i < 4; ++i)
+				ImGui::Image(nes_nametable[i]);
+			ImGui::EndTabItem();
+		}
+		
+		ImGui::EndTabBar();
+		ImGui::End();
+        ImGui::SFML::Render(window);
+		
         window.display();
 	}
 	

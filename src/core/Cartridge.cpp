@@ -20,7 +20,7 @@ bool Cartridge::load(const std::string& path)
 	
 	if(!file)
 	{
-		term::error("Error: '", path, "' could not be opened.");
+		Log::error("Error: '", path, "' could not be opened.");
 		return false;
 	}
 	
@@ -29,7 +29,7 @@ bool Cartridge::load(const std::string& path)
 
 	if(!(h[0] == 0x4E && h[1] == 0x45 && h[2] == 0x53 && h[3] == 0x1A))
 	{
-		term::error("Error: '", path, "' is not a valid iNES file (wrong header).");
+		Log::error("Error: '", path, "' is not a valid iNES file (wrong header).");
 		return false;
 	}
 	
@@ -73,15 +73,15 @@ bool Cartridge::load(const std::string& path)
 	
 	if(!_mappers_read_chr[_mapper])
 	{
-		term::error("Error: mapper ", _mapper, " is not supported.");
+		Log::error("Error: mapper ", _mapper, " is not supported.");
 		return false;
 	}
 	
-	term::log("Loaded '", path, "' successfully! "); 
-	term::log("> Mapper: ", _mapper, ", Mirroring: ", ((_mirrorring == None) ? "None" : (_mirrorring == Vertical ? "Vertical" : "Horizontal"))); 
-	term::log("> PRG Cartridge size: ", 16 * h[4], "kB (", _prg_rom_size, "B)"); 
-	term::log("> CHR Cartridge size: ", 8 * h[5], "kB (", _chr_rom_size, "B)"); 
-	term::log("> PRG RAM size: ", 8 * h[8], "kB (", _prg_ram_size, "B)"); 
+	Log::info("Loaded '", path, "' successfully! "); 
+	Log::info("> Mapper: ", _mapper, ", Mirroring: ", ((_mirrorring == None) ? "None" : (_mirrorring == Vertical ? "Vertical" : "Horizontal"))); 
+	Log::info("> PRG Cartridge size: ", 16 * h[4], "kB (", _prg_rom_size, "B)"); 
+	Log::info("> CHR Cartridge size: ", 8 * h[5], "kB (", _chr_rom_size, "B)"); 
+	Log::info("> PRG RAM size: ", 8 * h[8], "kB (", _prg_ram_size, "B)"); 
 	
 	return true;
 }

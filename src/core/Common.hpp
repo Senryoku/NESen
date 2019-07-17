@@ -5,6 +5,7 @@
 #include <cassert>
 
 #include <tools/term.hpp>
+#include <tools/log.hpp>
 
 using byte_t = char;
 using ubyte_t = uint8_t;

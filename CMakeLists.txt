@@ -8,7 +8,7 @@ endif()
 include_directories("${PROJECT_BINARY_DIR}")
 include_directories("${CMAKE_SOURCE_DIR}/src")
 
-set_property(GLOBAL PROPERTY CXX_STANDARD 20)
+set_property(GLOBAL PROPERTY CXX_STANDARD 17)
 
 # Define sources and executable
 set(EXECUTABLE_NAME "NESen")
@@ -27,9 +27,9 @@ set(IMGUI_SOURCES
 	${ImGui-SFML_DIR}/imgui-SFML.cpp
 )
 
-add_executable(${EXECUTABLE_NAME} ${SOURCES} src/NESen.cpp)
+add_executable(${EXECUTABLE_NAME} ${IMGUI_SOURCES} ${SOURCES} src/NESen.cpp)
 add_executable(cpu_nestest ${SOURCES} src/tests/cpu_nestest.cpp)
-add_executable(instr_test ${SOURCES} ${IMGUI_SOURCES} src/tests/instr_test.cpp)
+add_executable(instr_test ${SOURCES} src/tests/instr_test.cpp)
 
 # Detect and add SFML
 set(SFML_DIR "ext/SFML/")
@@ -40,7 +40,7 @@ if(SFML_FOUND)
   target_link_libraries(instr_test sfml-system sfml-window sfml-graphics sfml-audio)
 endif()
 
-target_link_libraries(instr_test opengl32)
+target_link_libraries(${EXECUTABLE_NAME} opengl32)
   
 add_custom_target(run
     DEPENDS ${EXECUTABLE_NAME}

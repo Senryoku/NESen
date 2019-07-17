@@ -393,7 +393,7 @@ void CPU::execute(word_t opcode)
 		
 		default:
 		{
-			term::error("Unknown opcode: ", Hexa8(opcode));
+			Log::error("Unknown opcode: ", Hexa8(opcode));
 			_reg_pc++; // Assuming at least one operand
 			break;
 		}
