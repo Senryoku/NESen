@@ -58,39 +58,58 @@ void PPU::step(size_t cpu_cycles)
 			word_t tile_h;
 			word_t tile_data0 = 0, tile_data1 = 0;
 			word_t y = (_scroll_y + _line) & 7;
-			word_t sprite_pixel = _scroll_x & 7;
+			word_t bg_tile_pixel = _scroll_x & 7;
 			addr_t nametable = 0x2000 + 0x400 * (_ppu_control & NameTableAddress);
 			addr_t attributetable = nametable + 0x03C0;
 			addr_t patterns = (_ppu_control & BackgoundPatternTableAddress) ? 0x1000 : 0;
 			nametable += 32 * ((_scroll_y + _line) >> 3);
 			attributetable += 8 * ((_scroll_y + _line) >> 5);
 			word_t attribute = 0;
-			color_t	color_cache[4][3]; // 4 palettes of 3 colors each 
 			bool background_transparency[ScreenWidth];
+			
+			color_t universal_background_color = rgb_palette[_mem[0x3F00] & 0x3F];
+			color_t	color_cache[4][3]; // 4 palettes of 3 colors each
+			// 0x3F00 : Universal background color
+			// 0x3F01 : Background palette 0 Color 0
+			// 0x3F02 : Background palette 0 Color 1
+			// 0x3F03 : Background palette 0 Color 2
+			// 0x3F04 : --
+			// 0x3F05 : Background palette 1 Color 0
+			// 0x3F06 : Background palette 1 Color 1
+			// 0x3F07 : Background palette 1 Color 2
+			// 0x3F08 : --
+			// ...
 			for(int i = 0; i < 4; ++i)
 				for(int j = 0; j < 3; ++j)
 				{
 					word_t val = _mem[0x3F01 + 4 * i + j];
-					color_cache[i][j] = rgb_palette[val & 0x7F];
+					color_cache[i][j] = rgb_palette[val & 0x3F];
 				}
-			bool top = ((_scroll_y + _line) % 32 < 16);
+
+			bool top = ((_scroll_y + _line) % 32) < 16;
 			for(size_t x = 0; x < ScreenWidth; ++x)
 			{
-				// Fetch Tile Data
-				if(sprite_pixel == 8 || x == 0)
+				// Fetch Tile Data (When crossing tile border, or a the beginning of the scanline)
+				if(bg_tile_pixel == 8 || x == 0)
 				{
 					addr_t tile_x = ((x + _scroll_x) >> 3);
-					if(tile_x >= 32) tile_x += 0x400 - 32;	// Next nametable
-					t = _mem[nametable + tile_x];
-					sprite_pixel = sprite_pixel % 8;
+					if(tile_x >= 32) {	// Next nametable
+						if(nametable == 0x2000 + 0x400 * 3)
+							t = _mem[0x2000 + tile_x - 32];
+						else
+							t = _mem[nametable + 0x400 + tile_x - 32];
+					} else
+						t = _mem[nametable + tile_x];
+					bg_tile_pixel = bg_tile_pixel % 8;
 					tile_l = read(patterns + t * 16 + y);
 					tile_h = read(patterns + t * 16 + y + 8);
 					tile_translation(tile_l, tile_h, tile_data0, tile_data1);
 					
+					// Get palette from attribute table
 					addr_t attribute_x = ((x + _scroll_x) >> 5);
 					if(attribute_x >= 8) attribute_x += 0x400 - 8;	// Next nametable
 					attribute = _mem[attributetable + attribute_x];
-					bool left = ((x + _scroll_x) % 32 < 16);
+					bool left = ((x + _scroll_x) % 32) < 16; // Each byte contains the palette index for 4 blocks of 2x2 tiles
 					if(top && !left)
 						attribute = attribute >> 2;
 					else if(!top && left)
@@ -100,17 +119,17 @@ void PPU::step(size_t cpu_cycles)
 					attribute &= 3;
 				}
 
-				word_t shift = ((7 - sprite_pixel) % 4) * 2;
-				word_t color = ((sprite_pixel > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
+				word_t shift = ((7 - bg_tile_pixel) % 4) * 2;
+				word_t color = ((bg_tile_pixel > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
 				if(color > 0)
 				{
 					background_transparency[x] = false;
 					_screen[_line * ScreenWidth + x] = color_cache[attribute][color - 1];
 				} else {
 					background_transparency[x] = true;
-					_screen[_line * ScreenWidth + x] = 0;
+					_screen[_line * ScreenWidth + x] = universal_background_color;
 				}
-				++sprite_pixel;
+				++bg_tile_pixel;
 			}
 		
 			// Sprites
@@ -129,7 +148,7 @@ void PPU::step(size_t cpu_cycles)
 				for(int j = 0; j < 3; ++j)
 				{
 					word_t val = _mem[0x3F11 + 4 * i + j];
-					color_cache[i][j] = rgb_palette[val & 0x7F];
+					color_cache[i][j] = rgb_palette[val & 0x3F];
 				}
 				
 			// Reverse order?
@@ -178,7 +197,7 @@ void PPU::step(size_t cpu_cycles)
 			//if(_ppu_control & VBlankEnable) // Mmh ?
 				_ppu_status |= VBlank;
 		} else if(_line == 261) { // Pre-render scanline (sometimes numbered -1)
-			_ppu_status &= ~Sprite0Hit;
+			_ppu_status &= ~Sprite0Hit; // Clear Sprite0Hit Bit
 		} else if(_line == 0) {
 			completed_frame = true;
 			_ppu_status &= ~VBlank;

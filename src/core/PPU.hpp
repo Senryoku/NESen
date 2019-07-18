@@ -129,22 +129,18 @@ public:
 					_scroll_y = value;
 				_scroll_first_read = !_scroll_first_read;
 			break;
-			case 0x06:
+			case 0x06: // PPU read/write address (two writes: most significant byte, least significant byte)
 				if(_ppu_addr_upper)
 					_ppu_addr = (_ppu_addr & 0x00FF) | (value << 8);
 				else
 					_ppu_addr = (_ppu_addr & 0xFF00) | value;
 				_ppu_addr_upper = !_ppu_addr_upper;
 			break;
-			case 0x07:
+			case 0x07: // PPU data read/write
 				_mem[_ppu_addr] = value;
-				/// Nametables range - Mirroring @todo Check...
-				if(_ppu_addr < 0x3F00)
-				{
-					if(_ppu_addr >= 0x3000)
-					{
-						_mem[_ppu_addr - 0x1000] = value;
-					} else if(cartridge->get_mirroring() == Cartridge::Horizontal) {
+				/// Nametables range - Mirroring
+				if(_ppu_addr >= 0x2000 && _ppu_addr <= 0x2EFF) {
+					if(cartridge->get_mirroring() == Cartridge::Horizontal) {
 						if(_ppu_addr < 0x2400 || (_ppu_addr >= 0x2800 && _ppu_addr < 0x2C00))
 							_mem[_ppu_addr + 0x400] = value;
 						else
@@ -156,6 +152,21 @@ public:
 							_mem[_ppu_addr - 0x800] = value;
 					}
 				}
+				
+				// 0x3000 - 0x3EFF Mirrors 0x2000 - 0x2EFF
+				if(_ppu_addr >= 0x3000 && _ppu_addr <= 0x3EFF)
+					_mem[_ppu_addr - 0x1000] = value;
+				
+				// Palette Mirroring
+				if(_ppu_addr == 0x3F00 || _ppu_addr == 0x3F04 || _ppu_addr == 0x3F08 ||  _ppu_addr == 0x3F0C)
+					_mem[_ppu_addr + 0x10] = value;
+				if(_ppu_addr == 0x3F10 || _ppu_addr == 0x3F14 || _ppu_addr == 0x3F18 ||  _ppu_addr == 0x3F1C)
+					_mem[_ppu_addr - 0x10] = value;
+				
+				// 0x3F20 - 0x3FFF Mirrors 0x3F00 - 0x3F1F
+				if(_ppu_addr >= 0x3F20 && _ppu_addr <= 0x3FFF)
+					_mem[0x3F00 + ((_ppu_addr - 0x3F20) % 0x20)] = value;
+				
 				_ppu_addr += (_ppu_control & VerticalWrite) ? 32 : 1;
 				//std::cout << "PPU Write: " << Hexa(_ppu_addr) << " = " << Hexa8(value) << std::endl;
 			break;
@@ -171,15 +182,21 @@ public:
 		_nmi = false;
 		return r;
 	}
-	
-	
+/*
 	color_t rgb_palette[0x40] = {
-		color_t(84, 84, 84),	color_t(0, 30, 116),	color_t(8, 16, 144),	color_t(48, 0, 136),	color_t(68, 0, 100),	color_t(92, 0, 48),		color_t(84, 4, 0),		color_t(60, 24, 0),		color_t(32, 42, 0),		color_t(8, 58, 0), 		color_t(0, 64, 0), 		color_t(0, 60, 0), 		color_t(0, 50, 60), 	color_t(0, 0, 0), 		color_t(0, 0, 0), color_t(0, 0, 0),
-		color_t(152, 150, 152),	color_t(8, 76, 196),	color_t(48, 50, 236),	color_t(92, 30, 228),	color_t(136, 20, 176),	color_t(160, 20, 100),	color_t(152, 34, 32),	color_t(120, 60, 0), 	color_t(84, 90, 0), 	color_t(40, 114, 0), 	color_t(8, 124, 0), 	color_t(0, 118, 40), 	color_t(0, 102, 120), 	color_t(0, 0, 0), 		color_t(0, 0, 0), color_t(0, 0, 0),
-		color_t(236, 238, 236),	color_t(76, 154, 236),	color_t(120, 124, 236),	color_t(176, 98, 236),	color_t(228, 84, 236),	color_t(236, 88, 180),	color_t(236, 106, 100),	color_t(212, 136, 32), 	color_t(160, 170, 0), 	color_t(116, 196, 0), 	color_t(76, 208, 32), 	color_t(56, 204, 108), 	color_t(56, 180, 204), 	color_t(60, 60, 60), 	color_t(0, 0, 0), color_t(0, 0, 0),
-		color_t(236, 238, 36),	color_t(168, 204, 236),	color_t(188, 188, 236),	color_t(212, 178, 236),	color_t(236, 174, 236),	color_t(236, 174, 212),	color_t(236, 180, 176),	color_t(228, 196, 144), color_t(204, 210, 120), color_t(180, 222, 120), color_t(168, 226, 144), color_t(152, 226, 180), color_t(160, 214, 228), color_t(160, 162, 160), color_t(0, 0, 0), color_t(0, 0, 0)
+		color_t(0x46, 0x46, 0x46), color_t(0x00, 0x01, 0x54), color_t(0x00, 0x00, 0x70), color_t(0x07, 0x00, 0x6b), color_t(0x28, 0x00, 0x48), color_t(0x3c, 0x00, 0x0e), color_t(0x3e, 0x00, 0x00), color_t(0x2c, 0x00, 0x00), color_t(0x0d, 0x03, 0x00), color_t(0x00, 0x15, 0x00), color_t(0x00, 0x1f, 0x00), color_t(0x00, 0x1f, 0x00), color_t(0x00, 0x14, 0x20), color_t(0x00, 0x00, 0x00), color_t(0x00, 0x00, 0x00), color_t(0x00, 0x00, 0x00), 
+		color_t(0x9d, 0x9d, 0x9d), color_t(0x00, 0x41, 0xb0), color_t(0x18, 0x25, 0xd5), color_t(0x4a, 0x0d, 0xcf), color_t(0x75, 0x00, 0x9f), color_t(0x90, 0x01, 0x53), color_t(0x92, 0x0f, 0x00), color_t(0x7b, 0x28, 0x00), color_t(0x51, 0x44, 0x00), color_t(0x20, 0x5c, 0x00), color_t(0x00, 0x69, 0x00), color_t(0x00, 0x69, 0x16),	color_t(0x00, 0x5a, 0x6a), color_t(0x00, 0x00, 0x00), color_t(0x00, 0x00, 0x00), color_t(0x00, 0x00, 0x00), 
+		color_t(0xfe, 0xff, 0xff), color_t(0x48, 0x96, 0xff), color_t(0x62, 0x6d, 0xff), color_t(0x8e, 0x5b, 0xff), color_t(0xd4, 0x5e, 0xff), color_t(0xf1, 0x60, 0xb4), color_t(0xf3, 0x6f, 0x5e), color_t(0xdc, 0x88, 0x17), color_t(0xb2, 0xa4, 0x00), color_t(0x7f, 0xbd, 0x00), color_t(0x53, 0xca, 0x28), color_t(0x38, 0xca, 0x76), color_t(0x36, 0xbb, 0xcb), color_t(0x2b, 0x2b, 0x2b), color_t(0x00, 0x00, 0x00), color_t(0x00, 0x00, 0x00), 
+		color_t(0xfe, 0xff, 0xff), color_t(0xb0, 0xd2, 0xff), color_t(0xb6, 0xbb, 0xff), color_t(0xcb, 0xb4, 0xff), color_t(0xed, 0xbc, 0xff), color_t(0xf9, 0xbd, 0xe0), color_t(0xfa, 0xc3, 0xbd), color_t(0xf0, 0xce, 0x9f),	color_t(0xdf, 0xd9, 0x90), color_t(0xca, 0xe3, 0x93), color_t(0xb8, 0xe9, 0xa6), color_t(0xad, 0xe9, 0xc6), color_t(0xac, 0xe3, 0xe9), color_t(0xa7, 0xa7, 0xa7), color_t(0x00, 0x00, 0x00), color_t(0x00, 0x00, 0x00)            
 	};
-	
+*/
+	color_t rgb_palette[0x40] = {
+		color_t( 84,  84,  84),  color_t(  0,  30, 116),  color_t(  8,  16, 144),  color_t( 48,   0, 136),  color_t( 68,   0, 100),  color_t( 92,   0,  48),  color_t( 84,   4,   0),  color_t( 60,  24,   0),  color_t( 32,  42,   0),  color_t(  8,  58,   0),  color_t(  0,  64,   0),  color_t(  0,  60,   0),  color_t(  0,  50,  60),  color_t(  0,   0,   0),  color_t(  0,   0,   0),  color_t(  0,   0,   0),
+		color_t(152, 150, 152),  color_t(  8,  76, 196),  color_t( 48,  50, 236),  color_t( 92,  30, 228),  color_t(136,  20, 176),  color_t(160,  20, 100),  color_t(152,  34,  32),  color_t(120,  60,   0),  color_t( 84,  90,   0),  color_t( 40, 114,   0),  color_t(  8, 124,   0),  color_t(  0, 118,  40),  color_t(  0, 102, 120),  color_t(  0,   0,   0),  color_t(  0,   0,   0),  color_t(  0,   0,   0),
+		color_t(236, 238, 236),  color_t( 76, 154, 236),  color_t(120, 124, 236),  color_t(176,  98, 236),  color_t(228,  84, 236),  color_t(236,  88, 180),  color_t(236, 106, 100),  color_t(212, 136,  32),  color_t(160, 170,   0),  color_t(116, 196,   0),  color_t( 76, 208,  32),  color_t( 56, 204, 108),  color_t( 56, 180, 204),  color_t( 60,  60,  60),  color_t(  0,   0,   0),  color_t(  0,   0,   0),
+		color_t(236, 238, 236),  color_t(168, 204, 236),  color_t(188, 188, 236),  color_t(212, 178, 236),  color_t(236, 174, 236),  color_t(236, 174, 212),  color_t(236, 180, 176),  color_t(228, 196, 144),  color_t(204, 210, 120),  color_t(180, 222, 120),  color_t(168, 226, 144),  color_t(152, 226, 180),  color_t(160, 214, 228),  color_t(160, 162, 160),  color_t(  0,   0,   0),  color_t(  0,   0,   0)
+	};
+
 	static inline void tile_translation(word_t l, word_t h, word_t& r0, word_t& r1)
 	{
 		r0 = r1 = 0;
@@ -189,6 +206,22 @@ public:
 		for(int i = 0; i < 4; i++)
 			r1 |= ((l & (1 << i)) << (2 * i - i)) | 
 					((h & (1 << i)) << (2 * i + 1 - i));
+	}
+
+	// Debug accessors
+	inline word_t get_control_reg() const { return _ppu_control; }
+	inline word_t get_mask_reg() const { return _ppu_mask; }
+	inline word_t get_status_reg() const { return _ppu_status; }
+	inline word_t get_oam_addr_reg() const { return _oam_addr; }
+	inline word_t get_scroll_x() const { return _scroll_x; }
+	inline word_t get_scroll_y() const { return _scroll_y; }
+	
+	inline color_t get_color(word_t palette_idx, word_t color_idx) const {
+		if(color_idx == 0) {
+			return rgb_palette[_mem[0x3F00] & 0x3F]; 
+		} else {
+			return rgb_palette[_mem[0x3F01 + 4 * palette_idx + color_idx - 1] & 0x3F]; 
+		}
 	}
 
 private:
