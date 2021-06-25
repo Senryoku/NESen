@@ -95,6 +95,7 @@ inline void brk()
 	_reg_pc++;
 	push16(_reg_pc);
 	push(_reg_ps | 0b00110000);
+	_reg_ps |= Interrupt;
 	_reg_pc = read16(0xFFFE);
 	Log::info("BRK caused a jump to ", Hexa(_reg_pc));
 }

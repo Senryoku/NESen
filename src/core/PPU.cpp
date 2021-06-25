@@ -58,12 +58,25 @@ void PPU::step(size_t cpu_cycles)
 			word_t tile_h;
 			word_t tile_data0 = 0, tile_data1 = 0;
 			word_t y = (_scroll_y + _line) & 7;
+			word_t coarse_y = (_scroll_y + _line) >> 3;
 			word_t bg_tile_pixel = _scroll_x & 7;
 			addr_t nametable = 0x2000 + 0x400 * (_ppu_control & NameTableAddress);
-			addr_t attributetable = nametable + 0x03C0;
 			addr_t patterns = (_ppu_control & BackgoundPatternTableAddress) ? 0x1000 : 0;
-			nametable += 32 * ((_scroll_y + _line) >> 3);
-			attributetable += 8 * ((_scroll_y + _line) >> 5);
+			
+			// Vertical Wrap
+			if(coarse_y >= 30) {
+				if(nametable < 0x2800)
+					nametable += 0x800;
+				else
+					nametable -= 0x800;
+				coarse_y -= 30;
+			}
+			
+			addr_t attribute_table = nametable + 0x03C0;
+			attribute_table += 8 * ((_scroll_y + _line) >> 5);
+			
+			nametable += 32 * coarse_y;
+			
 			word_t attribute = 0;
 			bool background_transparency[ScreenWidth];
 			
@@ -92,10 +105,10 @@ void PPU::step(size_t cpu_cycles)
 				// Fetch Tile Data (When crossing tile border, or a the beginning of the scanline)
 				if(bg_tile_pixel == 8 || x == 0)
 				{
-					addr_t tile_x = ((x + _scroll_x) >> 3);
-					if(tile_x >= 32) {	// Next nametable
-						if(nametable == 0x2000 + 0x400 * 3)
-							t = _mem[0x2000 + tile_x - 32];
+					addr_t tile_x = (x + _scroll_x) >> 3;
+					if(tile_x >= 32) {	// Next nametable (wraping)
+						if((nametable >= 0x2400 && nametable < 0x2800) || (nametable >= 0x2C00 && nametable < 0x3000))
+							t = _mem[nametable - 0x400 + tile_x - 32];
 						else
 							t = _mem[nametable + 0x400 + tile_x - 32];
 					} else
@@ -107,8 +120,14 @@ void PPU::step(size_t cpu_cycles)
 					
 					// Get palette from attribute table
 					addr_t attribute_x = ((x + _scroll_x) >> 5);
-					if(attribute_x >= 8) attribute_x += 0x400 - 8;	// Next nametable
-					attribute = _mem[attributetable + attribute_x];
+					if(attribute_x >= 8) { // Next nametable (wraping)
+						attribute_x -= 8;
+						if((attribute_table >= 0x2400 && attribute_table < 0x2800) || (attribute_table >= 0x2C00 && attribute_table < 0x3000))
+							attribute = _mem[attribute_table - 0x400 + attribute_x];
+						else
+							attribute = _mem[attribute_table + 0x400 + attribute_x];
+					} else
+						attribute = _mem[attribute_table + attribute_x];
 					bool left = ((x + _scroll_x) % 32) < 16; // Each byte contains the palette index for 4 blocks of 2x2 tiles
 					if(top && !left)
 						attribute = attribute >> 2;

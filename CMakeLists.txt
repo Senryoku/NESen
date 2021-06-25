@@ -5,10 +5,15 @@ if(CMAKE_BUILD_TYPE STREQUAL "")
   set(CMAKE_BUILD_TYPE Debug)
 endif()
 
+if (MSVC)
+    add_compile_options(/W4 /utf-8)
+else()
+    add_compile_options(-Wall -Wextra -pedantic)
+endif()
+
 include_directories("${PROJECT_BINARY_DIR}")
 include_directories("${CMAKE_SOURCE_DIR}/src")
 
-set_property(GLOBAL PROPERTY CXX_STANDARD 17)
 
 # Define sources and executable
 set(EXECUTABLE_NAME "NESen")
@@ -30,6 +35,10 @@ set(IMGUI_SOURCES
 add_executable(${EXECUTABLE_NAME} ${IMGUI_SOURCES} ${SOURCES} src/NESen.cpp)
 add_executable(cpu_nestest ${SOURCES} src/tests/cpu_nestest.cpp)
 add_executable(instr_test ${SOURCES} src/tests/instr_test.cpp)
+
+set_property(TARGET ${EXECUTABLE_NAME} PROPERTY CXX_STANDARD 20)
+set_property(TARGET cpu_nestest PROPERTY CXX_STANDARD 20)
+set_property(TARGET instr_test PROPERTY CXX_STANDARD 20)
 
 # Detect and add SFML
 set(SFML_DIR "ext/SFML/")

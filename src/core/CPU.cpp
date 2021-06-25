@@ -299,13 +299,17 @@ void CPU::execute(word_t opcode)
 		OP_(0xD4, _reg_pc++; nop);
 		OP_(0xF4, _reg_pc++; nop);
 		OP_(0x80, _reg_pc++; nop);
-		OP_(0x1C, _reg_pc+=2; nop);
-		OP_(0x3C, _reg_pc+=2; nop);
-		OP_(0x5C, _reg_pc+=2; nop);
-		OP_(0x7C, _reg_pc+=2; nop);
-		OP_(0xDC, _reg_pc+=2; nop);
-		OP_(0xFC, _reg_pc+=2; nop);
-		
+		OP_(0x82, _reg_pc++; nop);
+		OP_(0x89, _reg_pc++; nop);
+		OP_(0x1C, _reg_pc += 2; nop);
+		OP_(0x3C, _reg_pc += 2; nop);
+		OP_(0x5C, _reg_pc += 2; nop);
+		OP_(0x7C, _reg_pc += 2; nop);
+		OP_(0xC2, _reg_pc++; nop);
+		OP_(0xDC, _reg_pc += 2; nop);
+		OP_(0xE2, _reg_pc++; nop);
+		OP_(0xFC, _reg_pc += 2; nop);
+
 		// ORA
 		OP(0x01, ora, addr_indirectX);
 		OP(0x11, ora, addr_indirectY);
