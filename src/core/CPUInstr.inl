@@ -14,15 +14,15 @@ inline void _adc(word_t operand)
 	const uint16_t add = _reg_acc + operand + (_reg_ps & StateMask::Carry);
 
 	set(StateMask::Carry, add > 0xFF);
-	
+
 	// Overflow is set if the sum of two inputs with the same sign 
 	// produce a result with a different sign.
 	// a ^ b	=> 1 if sign bits are differents
 	// & 0x80	=> Conserve only sign bit
 	set(StateMask::Overflow, (~(_reg_acc ^ operand) & (_reg_acc ^ add)) & 0x80);
-	
+
 	_reg_acc = static_cast<word_t>(add & 0xFF);
-	
+
 	set_neg_zero(_reg_acc);
 }
 
@@ -49,7 +49,7 @@ inline word_t asl(word_t operand)
 inline void relative_jump(bool b)
 {
 	int offset = read(_reg_pc++);
-	if(b)_reg_pc += from_2c_to_signed(offset);
+	if (b)_reg_pc += from_2c_to_signed(offset);
 }
 
 inline void bcc()
@@ -217,7 +217,7 @@ inline void jsr(addr_t addr)
 inline void lax(addr_t addr)
 {
 	word_t operand = read(addr);
-	set_neg_zero(operand);     
+	set_neg_zero(operand);
 	_reg_acc = operand;
 	_reg_x = operand;
 }
@@ -225,7 +225,7 @@ inline void lax(addr_t addr)
 inline void lda(addr_t addr)
 {
 	word_t operand = read(addr);
-	set_neg_zero(operand);     
+	set_neg_zero(operand);
 	_reg_acc = operand;
 }
 

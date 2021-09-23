@@ -1,0 +1,14 @@
+﻿  Ftp.cpp
+  Http.cpp
+  IpAddress.cpp
+D:\Source\NESen\ext\SFML\src\SFML\Network\IpAddress.cpp(92,12): warning C4996: 'inet_ntoa': Use inet_ntop() or InetNtop() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+D:\Source\NESen\ext\SFML\src\SFML\Network\IpAddress.cpp(184,21): warning C4996: 'inet_addr': Use inet_pton() or InetPton() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+  Packet.cpp
+  Socket.cpp
+  SocketSelector.cpp
+  TcpListener.cpp
+  TcpSocket.cpp
+  UdpSocket.cpp
+  SocketImpl.cpp
+  Generating Code...
+  sfml-network.vcxproj -> H:\Source\NESen\ext\SFML\lib\Debug\sfml-network-s-d.lib

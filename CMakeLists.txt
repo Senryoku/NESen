@@ -35,10 +35,14 @@ set(IMGUI_SOURCES
 add_executable(${EXECUTABLE_NAME} ${IMGUI_SOURCES} ${SOURCES} src/NESen.cpp)
 add_executable(cpu_nestest ${SOURCES} src/tests/cpu_nestest.cpp)
 add_executable(instr_test ${SOURCES} src/tests/instr_test.cpp)
+add_executable(harte_test ${SOURCES} src/tests/harte_test.cpp)
 
 set_property(TARGET ${EXECUTABLE_NAME} PROPERTY CXX_STANDARD 20)
 set_property(TARGET cpu_nestest PROPERTY CXX_STANDARD 20)
 set_property(TARGET instr_test PROPERTY CXX_STANDARD 20)
+set_property(TARGET harte_test PROPERTY CXX_STANDARD 20)
+
+set_property(TARGET harte_test PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 
 # Detect and add SFML
 set(SFML_DIR "ext/SFML/")

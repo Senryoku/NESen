@@ -1,0 +1,10 @@
+^D:\SOURCE\NESEN\EXT\SFML\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Source/NESen/ext/SFML -BH:/Source/NESen/ext/SFML --check-stamp-file H:/Source/NESen/ext/SFML/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

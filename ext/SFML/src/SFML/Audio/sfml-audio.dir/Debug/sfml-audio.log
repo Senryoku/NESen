@@ -1,0 +1,22 @@
+﻿  ALCheck.cpp
+  AlResource.cpp
+  AudioDevice.cpp
+  Listener.cpp
+  Music.cpp
+  Sound.cpp
+  SoundBuffer.cpp
+  SoundBufferRecorder.cpp
+  InputSoundFile.cpp
+  OutputSoundFile.cpp
+  SoundRecorder.cpp
+  SoundSource.cpp
+  SoundStream.cpp
+  SoundFileFactory.cpp
+  SoundFileReaderFlac.cpp
+  SoundFileReaderOgg.cpp
+  SoundFileReaderWav.cpp
+  SoundFileWriterFlac.cpp
+  SoundFileWriterOgg.cpp
+  SoundFileWriterWav.cpp
+  Generating Code...
+  sfml-audio.vcxproj -> H:\Source\NESen\ext\SFML\lib\Debug\sfml-audio-s-d.lib

@@ -1,0 +1,361 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{09EBA5F7-D908-327E-9CD3-DF0E98E450C1}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>x64</Platform>
+    <ProjectName>sfml-graphics</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">H:\Source\NESen\ext\SFML\lib\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">sfml-graphics.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">sfml-graphics-s-d</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">H:\Source\NESen\ext\SFML\lib\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">sfml-graphics.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">sfml-graphics-s</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">H:\Source\NESen\ext\SFML\lib\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">sfml-graphics.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">sfml-graphics-s</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">H:\Source\NESen\ext\SFML\lib\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">sfml-graphics.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">sfml-graphics-s</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\Source\NESen\ext\SFML\include;D:\Source\NESen\ext\SFML\src;D:\Source\NESen\ext\SFML\extlibs\headers\stb_image;D:\Source\NESen\ext\SFML\extlibs\headers\freetype2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;SFML_STATIC;STBI_FAILURE_USERMSG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>H:\Source\NESen\ext\SFML\lib\Debug\sfml-graphics-s.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;SFML_STATIC;STBI_FAILURE_USERMSG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Source\NESen\ext\SFML\include;D:\Source\NESen\ext\SFML\src;D:\Source\NESen\ext\SFML\extlibs\headers\stb_image;D:\Source\NESen\ext\SFML\extlibs\headers\freetype2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Source\NESen\ext\SFML\include;D:\Source\NESen\ext\SFML\src;D:\Source\NESen\ext\SFML\extlibs\headers\stb_image;D:\Source\NESen\ext\SFML\extlibs\headers\freetype2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\Source\NESen\ext\SFML\include;D:\Source\NESen\ext\SFML\src;D:\Source\NESen\ext\SFML\extlibs\headers\stb_image;D:\Source\NESen\ext\SFML\extlibs\headers\freetype2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;SFML_STATIC;STBI_FAILURE_USERMSG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ProgramDataBaseFileName>H:\Source\NESen\ext\SFML\lib\Release\sfml-graphics-s.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;SFML_STATIC;STBI_FAILURE_USERMSG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Source\NESen\ext\SFML\include;D:\Source\NESen\ext\SFML\src;D:\Source\NESen\ext\SFML\extlibs\headers\stb_image;D:\Source\NESen\ext\SFML\extlibs\headers\freetype2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Source\NESen\ext\SFML\include;D:\Source\NESen\ext\SFML\src;D:\Source\NESen\ext\SFML\extlibs\headers\stb_image;D:\Source\NESen\ext\SFML\extlibs\headers\freetype2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\Source\NESen\ext\SFML\include;D:\Source\NESen\ext\SFML\src;D:\Source\NESen\ext\SFML\extlibs\headers\stb_image;D:\Source\NESen\ext\SFML\extlibs\headers\freetype2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;SFML_STATIC;STBI_FAILURE_USERMSG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;CMAKE_INTDIR="MinSizeRel";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ProgramDataBaseFileName>H:\Source\NESen\ext\SFML\lib\MinSizeRel\sfml-graphics-s.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;SFML_STATIC;STBI_FAILURE_USERMSG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;CMAKE_INTDIR=\"MinSizeRel\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Source\NESen\ext\SFML\include;D:\Source\NESen\ext\SFML\src;D:\Source\NESen\ext\SFML\extlibs\headers\stb_image;D:\Source\NESen\ext\SFML\extlibs\headers\freetype2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Source\NESen\ext\SFML\include;D:\Source\NESen\ext\SFML\src;D:\Source\NESen\ext\SFML\extlibs\headers\stb_image;D:\Source\NESen\ext\SFML\extlibs\headers\freetype2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\Source\NESen\ext\SFML\include;D:\Source\NESen\ext\SFML\src;D:\Source\NESen\ext\SFML\extlibs\headers\stb_image;D:\Source\NESen\ext\SFML\extlibs\headers\freetype2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;SFML_STATIC;STBI_FAILURE_USERMSG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;CMAKE_INTDIR="RelWithDebInfo";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>H:\Source\NESen\ext\SFML\lib\RelWithDebInfo\sfml-graphics-s.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;SFML_STATIC;STBI_FAILURE_USERMSG;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;CMAKE_INTDIR=\"RelWithDebInfo\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\Source\NESen\ext\SFML\include;D:\Source\NESen\ext\SFML\src;D:\Source\NESen\ext\SFML\extlibs\headers\stb_image;D:\Source\NESen\ext\SFML\extlibs\headers\freetype2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\Source\NESen\ext\SFML\include;D:\Source\NESen\ext\SFML\src;D:\Source\NESen\ext\SFML\extlibs\headers\stb_image;D:\Source\NESen\ext\SFML\extlibs\headers\freetype2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\CMakeLists.txt">
+      <StdOutEncoding>UTF-8</StdOutEncoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule D:/Source/NESen/ext/SFML/src/SFML/Graphics/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Source/NESen/ext/SFML -BH:/Source/NESen/ext/SFML --check-stamp-file H:/Source/NESen/ext/SFML/src/SFML/Graphics/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\Source\NESen\ext\SFML\cmake\Modules\FindFreetype.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">H:\Source\NESen\ext\SFML\src\SFML\Graphics\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule D:/Source/NESen/ext/SFML/src/SFML/Graphics/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Source/NESen/ext/SFML -BH:/Source/NESen/ext/SFML --check-stamp-file H:/Source/NESen/ext/SFML/src/SFML/Graphics/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\Source\NESen\ext\SFML\cmake\Modules\FindFreetype.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">H:\Source\NESen\ext\SFML\src\SFML\Graphics\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule D:/Source/NESen/ext/SFML/src/SFML/Graphics/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Source/NESen/ext/SFML -BH:/Source/NESen/ext/SFML --check-stamp-file H:/Source/NESen/ext/SFML/src/SFML/Graphics/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\Source\NESen\ext\SFML\cmake\Modules\FindFreetype.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">H:\Source\NESen\ext\SFML\src\SFML\Graphics\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule D:/Source/NESen/ext/SFML/src/SFML/Graphics/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Source/NESen/ext/SFML -BH:/Source/NESen/ext/SFML --check-stamp-file H:/Source/NESen/ext/SFML/src/SFML/Graphics/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\Source\NESen\ext\SFML\cmake\Modules\FindFreetype.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">H:\Source\NESen\ext\SFML\src\SFML\Graphics\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\BlendMode.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\BlendMode.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\Color.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Color.hpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Export.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\Font.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Font.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\Glsl.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Glsl.hpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Glsl.inl" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Glyph.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\GLCheck.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\GLCheck.hpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\GLExtensions.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\GLExtensions.cpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\Image.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Image.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\ImageLoader.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\ImageLoader.hpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\PrimitiveType.hpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Rect.hpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Rect.inl" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\RenderStates.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\RenderStates.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\RenderTexture.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\RenderTexture.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\RenderTarget.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\RenderTarget.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\RenderWindow.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\RenderWindow.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\Shader.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Shader.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\Texture.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Texture.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\TextureSaver.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\TextureSaver.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\Transform.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Transform.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\Transformable.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Transformable.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\View.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\View.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\Vertex.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Vertex.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\GLLoader.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\GLLoader.hpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Drawable.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\Shape.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Shape.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\CircleShape.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\CircleShape.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\RectangleShape.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\RectangleShape.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\ConvexShape.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\ConvexShape.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\Sprite.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Sprite.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\Text.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\Text.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\VertexArray.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\VertexArray.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\VertexBuffer.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\include\SFML\Graphics\VertexBuffer.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\RenderTextureImpl.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\RenderTextureImpl.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\RenderTextureImplFBO.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\RenderTextureImplFBO.hpp" />
+    <ClCompile Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\RenderTextureImplDefault.cpp" />
+    <ClInclude Include="D:\Source\NESen\ext\SFML\src\SFML\Graphics\RenderTextureImplDefault.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="H:\Source\NESen\ext\SFML\ZERO_CHECK.vcxproj">
+      <Project>{700535B2-BD99-3FB5-8C9C-3D10957F1827}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="H:\Source\NESen\ext\SFML\src\SFML\System\sfml-system.vcxproj">
+      <Project>{7577A077-F712-38BD-AA6E-88333A48A15C}</Project>
+      <Name>sfml-system</Name>
+    </ProjectReference>
+    <ProjectReference Include="H:\Source\NESen\ext\SFML\src\SFML\Window\sfml-window.vcxproj">
+      <Project>{9AFF43A9-81F1-3ED2-95EA-43BB86E21191}</Project>
+      <Name>sfml-window</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

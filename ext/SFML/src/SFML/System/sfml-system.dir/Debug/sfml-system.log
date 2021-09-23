@@ -1,0 +1,19 @@
+﻿  Clock.cpp
+  Err.cpp
+  Lock.cpp
+  Mutex.cpp
+  Sleep.cpp
+  String.cpp
+  Thread.cpp
+  ThreadLocal.cpp
+  Time.cpp
+  FileInputStream.cpp
+  MemoryInputStream.cpp
+  ClockImpl.cpp
+D:\Source\NESen\ext\SFML\src\SFML\System\Win32\ClockImpl.cpp(46,35): warning C4996: 'GetVersion': was declared deprecated
+  MutexImpl.cpp
+  SleepImpl.cpp
+  ThreadImpl.cpp
+  ThreadLocalImpl.cpp
+  Generating Code...
+  sfml-system.vcxproj -> H:\Source\NESen\ext\SFML\lib\Debug\sfml-system-s-d.lib

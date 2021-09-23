@@ -1,0 +1,29 @@
+﻿  Clipboard.cpp
+  Context.cpp
+  Cursor.cpp
+  GlContext.cpp
+  GlResource.cpp
+  Joystick.cpp
+  JoystickManager.cpp
+  Keyboard.cpp
+  Mouse.cpp
+  Touch.cpp
+  Sensor.cpp
+  SensorManager.cpp
+  VideoMode.cpp
+  Window.cpp
+  WindowBase.cpp
+  WindowImpl.cpp
+  CursorImpl.cpp
+  ClipboardImpl.cpp
+  WglContext.cpp
+  WglExtensions.cpp
+  Generating Code...
+  Compiling...
+  InputImpl.cpp
+  JoystickImpl.cpp
+  SensorImpl.cpp
+  VideoModeImpl.cpp
+  WindowImplWin32.cpp
+  Generating Code...
+  sfml-window.vcxproj -> H:\Source\NESen\ext\SFML\lib\Debug\sfml-window-s-d.lib

@@ -1,0 +1,10 @@
+^H:\SOURCE\NESEN\EXT\SFML\CMAKEFILES\B532AB6CA0B7B8E15A5A04C4835B9C6D\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Source/NESen/ext/SFML -BH:/Source/NESen/ext/SFML --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file H:/Source/NESen/ext/SFML/SFML.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

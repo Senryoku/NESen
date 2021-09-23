@@ -4,29 +4,13 @@ if("${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}" LESS 2.5)
    message(FATAL_ERROR "CMake >= 2.6.0 required")
 endif()
 cmake_policy(PUSH)
-cmake_policy(VERSION 2.6)
+cmake_policy(VERSION 2.6...3.18)
 #----------------------------------------------------------------
 # Generated CMake target import file.
 #----------------------------------------------------------------
 
 # Commands may need to know the format version.
 set(CMAKE_IMPORT_FILE_VERSION 1)
-
-if(CMAKE_VERSION VERSION_LESS 3.0.0)
-  message(FATAL_ERROR "This file relies on consumers using CMake 3.0.0 or greater.")
-endif()
-
-if(CMAKE_VERSION VERSION_LESS 3.0.0)
-  message(FATAL_ERROR "This file relies on consumers using CMake 3.0.0 or greater.")
-endif()
-
-if(CMAKE_VERSION VERSION_LESS 3.0.0)
-  message(FATAL_ERROR "This file relies on consumers using CMake 3.0.0 or greater.")
-endif()
-
-if(CMAKE_VERSION VERSION_LESS 3.0.0)
-  message(FATAL_ERROR "This file relies on consumers using CMake 3.0.0 or greater.")
-endif()
 
 if(CMAKE_VERSION VERSION_LESS 3.0.0)
   message(FATAL_ERROR "This file relies on consumers using CMake 3.0.0 or greater.")
@@ -116,8 +100,8 @@ set_target_properties(sfml-graphics PROPERTIES
 add_library(Freetype INTERFACE IMPORTED)
 
 set_target_properties(Freetype PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "D:/Source/NESen/ext/SFML/extlibs/headers/freetype2;C:/MinGW/include/freetype2"
-  INTERFACE_LINK_LIBRARIES "D:/Source/NESen/ext/SFML/extlibs/libs-mingw/x64/libfreetype.a"
+  INTERFACE_INCLUDE_DIRECTORIES "D:/Source/NESen/ext/SFML/extlibs/headers/freetype2"
+  INTERFACE_LINK_LIBRARIES "D:/Source/NESen/ext/SFML/extlibs/libs-msvc-universal/x64/freetype.lib"
 )
 
 # Create imported target OpenAL
@@ -125,7 +109,7 @@ add_library(OpenAL INTERFACE IMPORTED)
 
 set_target_properties(OpenAL PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "D:/Source/NESen/ext/SFML/extlibs/headers/AL"
-  INTERFACE_LINK_LIBRARIES "D:/Source/NESen/ext/SFML/extlibs/libs-mingw/x64/libopenal32.a"
+  INTERFACE_LINK_LIBRARIES "D:/Source/NESen/ext/SFML/extlibs/libs-msvc-universal/x64/openal32.lib"
 )
 
 # Create imported target Vorbis
@@ -134,7 +118,7 @@ add_library(Vorbis INTERFACE IMPORTED)
 set_target_properties(Vorbis PROPERTIES
   INTERFACE_COMPILE_DEFINITIONS "OV_EXCLUDE_STATIC_CALLBACKS"
   INTERFACE_INCLUDE_DIRECTORIES "D:/Source/NESen/ext/SFML/extlibs/headers;D:/Source/NESen/ext/SFML/extlibs/headers"
-  INTERFACE_LINK_LIBRARIES "D:/Source/NESen/ext/SFML/extlibs/libs-mingw/x64/libvorbisenc.a;D:/Source/NESen/ext/SFML/extlibs/libs-mingw/x64/libvorbisfile.a;D:/Source/NESen/ext/SFML/extlibs/libs-mingw/x64/libvorbis.a;D:/Source/NESen/ext/SFML/extlibs/libs-mingw/x64/libogg.a"
+  INTERFACE_LINK_LIBRARIES "D:/Source/NESen/ext/SFML/extlibs/libs-msvc-universal/x64/vorbisenc.lib;D:/Source/NESen/ext/SFML/extlibs/libs-msvc-universal/x64/vorbisfile.lib;D:/Source/NESen/ext/SFML/extlibs/libs-msvc-universal/x64/vorbis.lib;D:/Source/NESen/ext/SFML/extlibs/libs-msvc-universal/x64/ogg.lib"
 )
 
 # Create imported target FLAC
@@ -143,7 +127,7 @@ add_library(FLAC INTERFACE IMPORTED)
 set_target_properties(FLAC PROPERTIES
   INTERFACE_COMPILE_DEFINITIONS "FLAC__NO_DLL"
   INTERFACE_INCLUDE_DIRECTORIES "D:/Source/NESen/ext/SFML/extlibs/headers"
-  INTERFACE_LINK_LIBRARIES "D:/Source/NESen/ext/SFML/extlibs/libs-mingw/x64/libFLAC.a"
+  INTERFACE_LINK_LIBRARIES "D:/Source/NESen/ext/SFML/extlibs/libs-msvc-universal/x64/flac.lib"
 )
 
 # Create imported target sfml-audio
@@ -155,46 +139,172 @@ set_target_properties(sfml-audio PROPERTIES
   INTERFACE_LINK_LIBRARIES "\$<LINK_ONLY:OpenAL>;sfml-system;\$<LINK_ONLY:Vorbis>;\$<LINK_ONLY:FLAC>"
 )
 
+# Import target "sfml-system" for configuration "Debug"
+set_property(TARGET sfml-system APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
+set_target_properties(sfml-system PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_DEBUG "CXX"
+  IMPORTED_LOCATION_DEBUG "H:/Source/NESen/ext/SFML/lib/Debug/sfml-system-s-d.lib"
+  )
+
+# Import target "sfml-main" for configuration "Debug"
+set_property(TARGET sfml-main APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
+set_target_properties(sfml-main PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_DEBUG "CXX"
+  IMPORTED_LOCATION_DEBUG "H:/Source/NESen/ext/SFML/lib/Debug/sfml-main-d.lib"
+  )
+
+# Import target "sfml-window" for configuration "Debug"
+set_property(TARGET sfml-window APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
+set_target_properties(sfml-window PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_DEBUG "CXX"
+  IMPORTED_LOCATION_DEBUG "H:/Source/NESen/ext/SFML/lib/Debug/sfml-window-s-d.lib"
+  )
+
+# Import target "sfml-network" for configuration "Debug"
+set_property(TARGET sfml-network APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
+set_target_properties(sfml-network PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_DEBUG "CXX"
+  IMPORTED_LOCATION_DEBUG "H:/Source/NESen/ext/SFML/lib/Debug/sfml-network-s-d.lib"
+  )
+
+# Import target "sfml-graphics" for configuration "Debug"
+set_property(TARGET sfml-graphics APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
+set_target_properties(sfml-graphics PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_DEBUG "CXX"
+  IMPORTED_LOCATION_DEBUG "H:/Source/NESen/ext/SFML/lib/Debug/sfml-graphics-s-d.lib"
+  )
+
+# Import target "sfml-audio" for configuration "Debug"
+set_property(TARGET sfml-audio APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
+set_target_properties(sfml-audio PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_DEBUG "CXX"
+  IMPORTED_LOCATION_DEBUG "H:/Source/NESen/ext/SFML/lib/Debug/sfml-audio-s-d.lib"
+  )
+
 # Import target "sfml-system" for configuration "Release"
 set_property(TARGET sfml-system APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(sfml-system PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
-  IMPORTED_LOCATION_RELEASE "D:/Source/NESen/ext/SFML/lib/libsfml-system-s.a"
+  IMPORTED_LOCATION_RELEASE "H:/Source/NESen/ext/SFML/lib/Release/sfml-system-s.lib"
   )
 
 # Import target "sfml-main" for configuration "Release"
 set_property(TARGET sfml-main APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(sfml-main PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
-  IMPORTED_LOCATION_RELEASE "D:/Source/NESen/ext/SFML/lib/libsfml-main.a"
+  IMPORTED_LOCATION_RELEASE "H:/Source/NESen/ext/SFML/lib/Release/sfml-main.lib"
   )
 
 # Import target "sfml-window" for configuration "Release"
 set_property(TARGET sfml-window APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(sfml-window PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
-  IMPORTED_LOCATION_RELEASE "D:/Source/NESen/ext/SFML/lib/libsfml-window-s.a"
+  IMPORTED_LOCATION_RELEASE "H:/Source/NESen/ext/SFML/lib/Release/sfml-window-s.lib"
   )
 
 # Import target "sfml-network" for configuration "Release"
 set_property(TARGET sfml-network APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(sfml-network PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
-  IMPORTED_LOCATION_RELEASE "D:/Source/NESen/ext/SFML/lib/libsfml-network-s.a"
+  IMPORTED_LOCATION_RELEASE "H:/Source/NESen/ext/SFML/lib/Release/sfml-network-s.lib"
   )
 
 # Import target "sfml-graphics" for configuration "Release"
 set_property(TARGET sfml-graphics APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(sfml-graphics PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
-  IMPORTED_LOCATION_RELEASE "D:/Source/NESen/ext/SFML/lib/libsfml-graphics-s.a"
+  IMPORTED_LOCATION_RELEASE "H:/Source/NESen/ext/SFML/lib/Release/sfml-graphics-s.lib"
   )
 
 # Import target "sfml-audio" for configuration "Release"
 set_property(TARGET sfml-audio APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(sfml-audio PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
-  IMPORTED_LOCATION_RELEASE "D:/Source/NESen/ext/SFML/lib/libsfml-audio-s.a"
+  IMPORTED_LOCATION_RELEASE "H:/Source/NESen/ext/SFML/lib/Release/sfml-audio-s.lib"
+  )
+
+# Import target "sfml-system" for configuration "MinSizeRel"
+set_property(TARGET sfml-system APPEND PROPERTY IMPORTED_CONFIGURATIONS MINSIZEREL)
+set_target_properties(sfml-system PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_MINSIZEREL "CXX"
+  IMPORTED_LOCATION_MINSIZEREL "H:/Source/NESen/ext/SFML/lib/MinSizeRel/sfml-system-s.lib"
+  )
+
+# Import target "sfml-main" for configuration "MinSizeRel"
+set_property(TARGET sfml-main APPEND PROPERTY IMPORTED_CONFIGURATIONS MINSIZEREL)
+set_target_properties(sfml-main PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_MINSIZEREL "CXX"
+  IMPORTED_LOCATION_MINSIZEREL "H:/Source/NESen/ext/SFML/lib/MinSizeRel/sfml-main.lib"
+  )
+
+# Import target "sfml-window" for configuration "MinSizeRel"
+set_property(TARGET sfml-window APPEND PROPERTY IMPORTED_CONFIGURATIONS MINSIZEREL)
+set_target_properties(sfml-window PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_MINSIZEREL "CXX"
+  IMPORTED_LOCATION_MINSIZEREL "H:/Source/NESen/ext/SFML/lib/MinSizeRel/sfml-window-s.lib"
+  )
+
+# Import target "sfml-network" for configuration "MinSizeRel"
+set_property(TARGET sfml-network APPEND PROPERTY IMPORTED_CONFIGURATIONS MINSIZEREL)
+set_target_properties(sfml-network PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_MINSIZEREL "CXX"
+  IMPORTED_LOCATION_MINSIZEREL "H:/Source/NESen/ext/SFML/lib/MinSizeRel/sfml-network-s.lib"
+  )
+
+# Import target "sfml-graphics" for configuration "MinSizeRel"
+set_property(TARGET sfml-graphics APPEND PROPERTY IMPORTED_CONFIGURATIONS MINSIZEREL)
+set_target_properties(sfml-graphics PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_MINSIZEREL "CXX"
+  IMPORTED_LOCATION_MINSIZEREL "H:/Source/NESen/ext/SFML/lib/MinSizeRel/sfml-graphics-s.lib"
+  )
+
+# Import target "sfml-audio" for configuration "MinSizeRel"
+set_property(TARGET sfml-audio APPEND PROPERTY IMPORTED_CONFIGURATIONS MINSIZEREL)
+set_target_properties(sfml-audio PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_MINSIZEREL "CXX"
+  IMPORTED_LOCATION_MINSIZEREL "H:/Source/NESen/ext/SFML/lib/MinSizeRel/sfml-audio-s.lib"
+  )
+
+# Import target "sfml-system" for configuration "RelWithDebInfo"
+set_property(TARGET sfml-system APPEND PROPERTY IMPORTED_CONFIGURATIONS RELWITHDEBINFO)
+set_target_properties(sfml-system PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_RELWITHDEBINFO "CXX"
+  IMPORTED_LOCATION_RELWITHDEBINFO "H:/Source/NESen/ext/SFML/lib/RelWithDebInfo/sfml-system-s.lib"
+  )
+
+# Import target "sfml-main" for configuration "RelWithDebInfo"
+set_property(TARGET sfml-main APPEND PROPERTY IMPORTED_CONFIGURATIONS RELWITHDEBINFO)
+set_target_properties(sfml-main PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_RELWITHDEBINFO "CXX"
+  IMPORTED_LOCATION_RELWITHDEBINFO "H:/Source/NESen/ext/SFML/lib/RelWithDebInfo/sfml-main.lib"
+  )
+
+# Import target "sfml-window" for configuration "RelWithDebInfo"
+set_property(TARGET sfml-window APPEND PROPERTY IMPORTED_CONFIGURATIONS RELWITHDEBINFO)
+set_target_properties(sfml-window PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_RELWITHDEBINFO "CXX"
+  IMPORTED_LOCATION_RELWITHDEBINFO "H:/Source/NESen/ext/SFML/lib/RelWithDebInfo/sfml-window-s.lib"
+  )
+
+# Import target "sfml-network" for configuration "RelWithDebInfo"
+set_property(TARGET sfml-network APPEND PROPERTY IMPORTED_CONFIGURATIONS RELWITHDEBINFO)
+set_target_properties(sfml-network PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_RELWITHDEBINFO "CXX"
+  IMPORTED_LOCATION_RELWITHDEBINFO "H:/Source/NESen/ext/SFML/lib/RelWithDebInfo/sfml-network-s.lib"
+  )
+
+# Import target "sfml-graphics" for configuration "RelWithDebInfo"
+set_property(TARGET sfml-graphics APPEND PROPERTY IMPORTED_CONFIGURATIONS RELWITHDEBINFO)
+set_target_properties(sfml-graphics PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_RELWITHDEBINFO "CXX"
+  IMPORTED_LOCATION_RELWITHDEBINFO "H:/Source/NESen/ext/SFML/lib/RelWithDebInfo/sfml-graphics-s.lib"
+  )
+
+# Import target "sfml-audio" for configuration "RelWithDebInfo"
+set_property(TARGET sfml-audio APPEND PROPERTY IMPORTED_CONFIGURATIONS RELWITHDEBINFO)
+set_target_properties(sfml-audio PROPERTIES
+  IMPORTED_LINK_INTERFACE_LANGUAGES_RELWITHDEBINFO "CXX"
+  IMPORTED_LOCATION_RELWITHDEBINFO "H:/Source/NESen/ext/SFML/lib/RelWithDebInfo/sfml-audio-s.lib"
   )
 
 # This file does not depend on other imported targets which have
