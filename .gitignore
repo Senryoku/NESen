@@ -51,3 +51,4 @@ tests/
 Makefile
 Makefile
 build_msvc/
+build/

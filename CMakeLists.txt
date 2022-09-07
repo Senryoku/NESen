@@ -20,9 +20,11 @@ set(EXECUTABLE_NAME "NESen")
 aux_source_directory("src/core" SOURCES)
 aux_source_directory("src/tools" SOURCES)
 
+add_library(nesenlib STATIC ${SOURCES} ${TOOLS} ${HEADERS})
+
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
 
-#dear imgui
+# Dear Imgui
 set(ImGui-SFML_DIR "ext/imgui-sfml")
 include_directories(${ImGui-SFML_DIR})
 set(IMGUI_SOURCES
@@ -32,10 +34,15 @@ set(IMGUI_SOURCES
 	${ImGui-SFML_DIR}/imgui-SFML.cpp
 )
 
-add_executable(${EXECUTABLE_NAME} ${IMGUI_SOURCES} ${SOURCES} src/NESen.cpp)
-add_executable(cpu_nestest ${SOURCES} src/tests/cpu_nestest.cpp)
-add_executable(instr_test ${SOURCES} src/tests/instr_test.cpp)
-add_executable(harte_test ${SOURCES} src/tests/harte_test.cpp)
+add_executable(${EXECUTABLE_NAME} ${IMGUI_SOURCES} src/NESen.cpp)
+add_executable(cpu_nestest src/tests/cpu_nestest.cpp)
+add_executable(instr_test src/tests/instr_test.cpp)
+add_executable(harte_test src/tests/harte_test.cpp)
+
+target_link_libraries(${EXECUTABLE_NAME} nesenlib)
+target_link_libraries(cpu_nestest nesenlib)
+target_link_libraries(instr_test nesenlib)
+target_link_libraries(harte_test nesenlib)
 
 set_property(TARGET ${EXECUTABLE_NAME} PROPERTY CXX_STANDARD 20)
 set_property(TARGET cpu_nestest PROPERTY CXX_STANDARD 20)
@@ -44,26 +51,12 @@ set_property(TARGET harte_test PROPERTY CXX_STANDARD 20)
 
 set_property(TARGET harte_test PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 
-# Detect and add SFML
-set(SFML_DIR "ext/SFML/")
-find_package(SFML COMPONENTS system window graphics audio REQUIRED)
-if(SFML_FOUND)
-  include_directories(${SFML_DIR}/include)
-  target_link_libraries(${EXECUTABLE_NAME} sfml-system sfml-window sfml-graphics sfml-audio)
-  target_link_libraries(instr_test sfml-system sfml-window sfml-graphics sfml-audio)
-endif()
+set(BUILD_SHARED_LIBS  FALSE) # Statically link SFML
+add_subdirectory("ext/SFML/")
+target_include_directories(${EXECUTABLE_NAME} PUBLIC "ext/SFML/include")
+target_link_libraries(${EXECUTABLE_NAME} sfml-system sfml-window sfml-graphics sfml-audio)
 
 target_link_libraries(${EXECUTABLE_NAME} opengl32)
-  
-add_custom_target(run
-    DEPENDS ${EXECUTABLE_NAME}
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/ext/SFML/lib/sfml-system-2.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/ext/SFML/lib/sfml-window-2.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/ext/SFML/lib/sfml-graphics-2.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/ext/SFML/lib/sfml-audio-2.dll" $<TARGET_FILE_DIR:${EXECUTABLE_NAME}>
-    COMMAND ${EXECUTABLE_NAME}
-	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
 
 add_custom_target(tests
     DEPENDS cpu_nestest
