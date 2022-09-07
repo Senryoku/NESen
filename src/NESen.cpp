@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <iomanip>
 #include <sstream>
 
@@ -31,45 +32,25 @@ const std::vector<std::string> single_roms{"01-basics.nes", "02-implied.nes", "0
                                            "07-abs_xy.nes", "08-ind_x.nes",   "09-ind_y.nes",     "10-branches.nes",  "11-stack.nes", "12-jmp_jsr.nes",
                                            "13-rts.nes",    "14-rti.nes",     "15-brk.nes",       "16-special.nes"};
 
-#include <filesystem>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-int is_directory(const char* path) {
-    return std::filesystem::is_directory(path);
-}
-
 std::string explore(const std::string& path) {
     std::string r;
-#if 0
-	DIR* dir;
-	struct dirent* ent;
-	if ((dir = opendir(path.c_str())) != NULL) {
-		/* print all the files and directories within directory */
-		while ((ent = readdir(dir)) != NULL) {
-			if (ent->d_name == "." || ent->d_name == "..")
-				continue;
-			//printf ("%s\n", ent->d_name);
-			std::string tmp = path + ent->d_name;
-			if (is_directory(tmp.c_str())) {
-				if (ImGui::TreeNode(ent->d_name)) {
-					r = explore(tmp);
-					ImGui::TreePop();
-				}
-			}
-			else {
-				if (ImGui::Button(ent->d_name)) {
-					return tmp;
-				}
-			}
-		}
-		closedir(dir);
-	}
-	else {
-		/* could not open directory */
-		return nullptr;
-	}
-#endif
+
+    // print all the files and directories within directory
+    for(const auto& entry : std::filesystem::directory_iterator(path)) {
+        if(entry.path().filename() == "." || entry.path().filename() == "..")
+            continue;
+        if(std::filesystem::is_directory(entry.path())) {
+            if(ImGui::TreeNode(entry.path().string().c_str())) {
+                r = explore(entry.path().string());
+                ImGui::TreePop();
+            }
+        } else {
+            if(ImGui::Button(entry.path().string().c_str())) {
+                return entry.path().string();
+            }
+        }
+    }
+
     return r;
 }
 
