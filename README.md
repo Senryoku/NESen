@@ -29,3 +29,5 @@ It runs Donkey Kong at an awkward speed, but that's about it. Next steps should 
   
 ## Dependencies
 * SFML 2.X (http://www.sfml-dev.org/) for graphical output and input handling.
+* imgui-sfml
+* JSON for Modern C++ (https://github.com/nlohmann/json)

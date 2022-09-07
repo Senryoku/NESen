@@ -24,6 +24,8 @@ add_library(nesenlib STATIC ${SOURCES} ${TOOLS} ${HEADERS})
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
 
+include_directories("ext")
+
 # Dear Imgui
 set(ImGui-SFML_DIR "ext/imgui-sfml")
 include_directories(${ImGui-SFML_DIR})
