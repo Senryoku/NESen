@@ -29,6 +29,11 @@ inline void and_(addr_t addr) {
     set_neg_zero(_reg_acc);
 }
 
+inline void and_(word_t operand) {
+    _reg_acc &= operand;
+    set_neg_zero(_reg_acc);
+}
+
 inline word_t asl(addr_t addr) {
     return asl(read(addr));
 }
@@ -239,16 +244,17 @@ inline void pla() {
 }
 
 inline void plp() {
-    _reg_ps = pop() & 0b11001111;
+    _reg_ps = pop();
 }
 
 inline void rla(addr_t addr) {
-    rla(read(addr));
+    word_t tmp = rol(addr);
+    write(addr, tmp);
+    and_(tmp);
 }
 
 inline void rla(word_t operand) {
-    word_t tmp = rol(operand);
-    _reg_acc &= tmp;
+    and_(rol(operand));
 }
 
 inline word_t rol(addr_t addr) {
