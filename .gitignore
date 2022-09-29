@@ -53,3 +53,4 @@ Makefile
 build_msvc/
 build/
 imgui.ini
+.vs/

@@ -6,7 +6,7 @@ const std::array<const char*, 5> _log_types = {"Info", "Success", "Warning", "Er
 
 const std::array<Color, 5> _log_types_colors = {LightBlue, Green, Yellow, Red, Reset};
 
-LogType                                _min_level = Success;
+LogType                                _min_level = Info;
 std::ostringstream                     _log_line;
 std::deque<LogLine>                    _logs;
 std::function<void(const LogLine& ll)> _log_callback = _default_log_callback;

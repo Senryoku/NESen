@@ -45,7 +45,7 @@ void PPU::step(size_t cpu_cycles) {
             word_t tile_l;
             word_t tile_h;
             word_t tile_data0 = 0, tile_data1 = 0;
-            word_t y = (_scroll_y + _line) & 7;
+            word_t sy = (_scroll_y + _line) & 7;
             word_t coarse_y = (_scroll_y + _line) >> 3;
             word_t bg_tile_pixel = _scroll_x & 7;
             addr_t nametable = 0x2000 + 0x400 * (_ppu_control & NameTableAddress);
@@ -99,8 +99,8 @@ void PPU::step(size_t cpu_cycles) {
                     } else
                         t = _mem[nametable + tile_x];
                     bg_tile_pixel = bg_tile_pixel % 8;
-                    tile_l = read(patterns + t * 16 + y);
-                    tile_h = read(patterns + t * 16 + y + 8);
+                    tile_l = read(patterns + t * 16 + sy);
+                    tile_h = read(patterns + t * 16 + sy + 8);
                     tile_translation(tile_l, tile_h, tile_data0, tile_data1);
 
                     // Get palette from attribute table

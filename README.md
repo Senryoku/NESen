@@ -11,6 +11,7 @@ It runs Donkey Kong at an awkward speed, but that's about it. Next steps should 
 * Debug
   * Speed
   * Crashing mapper 000 games
+  * Sprite Zero Hit (Super Mario Bros. freezes)
 * ~~Controls~~
 * Complete memory mapping (and cartridge)
 * CPU
@@ -21,11 +22,10 @@ It runs Donkey Kong at an awkward speed, but that's about it. Next steps should 
   * (Some unofficial opcodes)
 * PPU
   * Nametable mapping/mirroring (via cartridge?)
-  * Palette 0 (Backdrop color), palettes 0x3F04/0x3F08/0x3F0C and mirror palettes
+  * Palette 0 (Backdrop color), ~~palettes 0x3F04/0x3F08/0x3F0C and mirror palettes~~
   * ~~Attributes (Color Palettes)~~
   * ~~Sprites~~
   * (Correct Video Emulation?)
-* (GUI with wxWidget)
   
 ## Dependencies
 * SFML 2.X (http://www.sfml-dev.org/) for graphical output and input handling.

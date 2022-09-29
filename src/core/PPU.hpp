@@ -80,18 +80,21 @@ class PPU {
             case 0x02: {
                 word_t r = _ppu_status;
                 _ppu_status &= ~VBlank; // Clear VBlank Status when reading it
+                _ppu_addr_upper = true;
                 return r;
             }
             case 0x04: return _oam[_oam_addr];
             case 0x07: {
-                static word_t internal_buffer = 0;
+                // PPUDATA read
+                static word_t internal_buffer = 0; // Delayed read
                 word_t        r;
                 if(_ppu_addr < 0x3F00) {
                     r = internal_buffer;
                     internal_buffer = _mem[_ppu_addr];
                 } else {
-                    r = _mem[_ppu_addr];
-                    internal_buffer = _mem[_ppu_addr - 0x1F00];
+                    // Palette Mirroring
+                    r = _mem[(_ppu_addr & 0x1F) + 0x3F00];
+                    internal_buffer = _mem[(_ppu_addr & 0x1F) + 0x2000]; // ??
                 }
                 _ppu_addr += (_ppu_control & VerticalWrite) ? 32 : 1;
                 return r;
@@ -145,15 +148,19 @@ class PPU {
                 if(_ppu_addr >= 0x3000 && _ppu_addr <= 0x3EFF)
                     _mem[_ppu_addr - 0x1000] = value;
 
-                // Palette Mirroring
-                if(_ppu_addr == 0x3F00 || _ppu_addr == 0x3F04 || _ppu_addr == 0x3F08 || _ppu_addr == 0x3F0C)
-                    _mem[_ppu_addr + 0x10] = value;
-                if(_ppu_addr == 0x3F10 || _ppu_addr == 0x3F14 || _ppu_addr == 0x3F18 || _ppu_addr == 0x3F1C)
-                    _mem[_ppu_addr - 0x10] = value;
+                // Palettes
+                if(_ppu_addr >= 0x3F00) {
+                    // 0x3F20 - 0x3FFF Mirrors 0x3F00 - 0x3F1F
+                    auto addr = (_ppu_addr & 0x1f) + 0x3F00;
+                    _mem[addr] = value;
 
-                // 0x3F20 - 0x3FFF Mirrors 0x3F00 - 0x3F1F
-                if(_ppu_addr >= 0x3F20 && _ppu_addr <= 0x3FFF)
-                    _mem[0x3F00 + ((_ppu_addr - 0x3F20) % 0x20)] = value;
+                    // Palette Mirroring, double the write to simplify the reads
+                    if(addr % 4 == 0)
+                        if(addr < 0x3F10)
+                            _mem[addr + 0x10] = value;
+                        else
+                            _mem[addr - 0x10] = value;
+                }
 
                 _ppu_addr += (_ppu_control & VerticalWrite) ? 32 : 1;
                 // std::cout << "PPU Write: " << Hexa(_ppu_addr) << " = " << Hexa8(value) << std::endl;
