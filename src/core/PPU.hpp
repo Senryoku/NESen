@@ -80,7 +80,7 @@ class PPU {
             case 0x02: {
                 word_t r = _ppu_status;
                 _ppu_status &= ~VBlank; // Clear VBlank Status when reading it
-                _ppu_addr_upper = true;
+                _scroll_ppu_addr_first_access = true;
                 return r;
             }
             case 0x04: return _oam[_oam_addr];
@@ -114,18 +114,18 @@ class PPU {
             case 0x03: _oam_addr = value; break;
             case 0x04: _oam[_oam_addr++] = value; break;
             case 0x05: // Scrolling Register
-                if(_scroll_first_read)
+                if(_scroll_ppu_addr_first_access)
                     _scroll_x = value;
                 else
                     _scroll_y = value;
-                _scroll_first_read = !_scroll_first_read;
+                _scroll_ppu_addr_first_access = !_scroll_ppu_addr_first_access;
                 break;
             case 0x06: // PPU read/write address (two writes: most significant byte, least significant byte)
-                if(_ppu_addr_upper)
+                if(_scroll_ppu_addr_first_access)
                     _ppu_addr = (_ppu_addr & 0x00FF) | (value << 8);
                 else
                     _ppu_addr = (_ppu_addr & 0xFF00) | value;
-                _ppu_addr_upper = !_ppu_addr_upper;
+                _scroll_ppu_addr_first_access = !_scroll_ppu_addr_first_access;
                 break;
             case 0x07: // PPU data read/write
                 _mem[_ppu_addr] = value;
@@ -236,14 +236,14 @@ class PPU {
     word_t _ppu_mask = 0;    // $2001
     word_t _ppu_status = 0;  // $2002
     word_t _oam_addr = 0;    // $2003
-    bool   _scroll_first_read = true;
-    word_t _scroll_x = 0; // Access by $2005
-    word_t _scroll_y = 0; // Access by $2005
+    word_t _scroll_x = 0;    // Access by $2005
+    word_t _scroll_y = 0;    // Access by $2005
 
     bool _nmi = false; // Non-Maskable Interrupt
 
-    bool   _ppu_addr_upper = true;
     addr_t _ppu_addr = 0; // Access by $2006
+
+    bool _scroll_ppu_addr_first_access = true; // Shared by _ppu_addr and _scroll_x/_scroll_y access
 
     word_t* _mem = nullptr; // Access by $2007
     word_t* _oam = nullptr; // Access by $2004
