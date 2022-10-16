@@ -9,6 +9,7 @@
 		"xlocnum": "cpp",
 		"xtr1common": "cpp",
 		"format": "cpp",
-		"iostream": "cpp"
+		"iostream": "cpp",
+		"xmemory": "cpp"
 	}
 }
