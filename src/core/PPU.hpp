@@ -80,7 +80,7 @@ class PPU {
             case 0x02: {
                 word_t r = _ppu_status;
                 _ppu_status &= ~VBlank; // Clear VBlank Status when reading it
-                _scroll_ppu_addr_first_access = true;
+                _w = 0;
                 return r;
             }
             case 0x04: return _oam[_oam_addr];
@@ -88,15 +88,15 @@ class PPU {
                 // PPUDATA read
                 static word_t internal_buffer = 0; // Delayed read
                 word_t        r;
-                if(_ppu_addr < 0x3F00) {
+                if(_v < 0x3F00) {
                     r = internal_buffer;
-                    internal_buffer = _mem[_ppu_addr];
+                    internal_buffer = mem_read(_v);
                 } else {
                     // Palette Mirroring
-                    r = _mem[(_ppu_addr & 0x1F) + 0x3F00];
-                    internal_buffer = _mem[(_ppu_addr & 0x1F) + 0x2000]; // ??
+                    r = mem_read((_v & 0x1F) + 0x3F00);
+                    internal_buffer = mem_read((_v & 0x1F) + 0x2000); // ??
                 }
-                _ppu_addr += (_ppu_control & VerticalWrite) ? 32 : 1;
+                _v += (_ppu_control & VerticalWrite) ? 32 : 1;
                 return r;
             }
         }
@@ -108,50 +108,59 @@ class PPU {
     inline void write(addr_t addr, word_t value) {
         assert(addr >= 0x2000 && addr < 0x4000);
         switch(addr & 0x7) {
-            case 0x00: _ppu_control = value; break;
+            case 0x00:
+                _ppu_control = value;
+                _t = (_t & 0b0111001111111111) | ((value & 3) << 10);
+                break;
             case 0x01: _ppu_mask = value; break;
             case 0x02: _ppu_status = value; break;
             case 0x03: _oam_addr = value; break;
             case 0x04: _oam[_oam_addr++] = value; break;
             case 0x05: // Scrolling Register
-                if(_scroll_ppu_addr_first_access)
-                    _scroll_x = value;
-                else
-                    _scroll_y = value;
-                _scroll_ppu_addr_first_access = !_scroll_ppu_addr_first_access;
+                if(_w == 0) {
+                    _t = (_t & 0b0111111111100000) | (value >> 3);
+                    _x = value & 3;
+                    _w = 1;
+                } else {
+                    _t = (_t & 0b0000110000011111) | ((value & 3) << 12) | ((static_cast<addr_t>(value) & 0b11111000) << 2);
+                    _w = 0;
+                }
                 break;
             case 0x06: // PPU read/write address (two writes: most significant byte, least significant byte)
-                if(_scroll_ppu_addr_first_access)
-                    _ppu_addr = (_ppu_addr & 0x00FF) | (value << 8);
-                else
-                    _ppu_addr = (_ppu_addr & 0xFF00) | value;
-                _scroll_ppu_addr_first_access = !_scroll_ppu_addr_first_access;
+                if(_w == 0) {
+                    _t = (_t & 0b0000000011111111) | ((static_cast<addr_t>(value) & 0b00111111) << 8);
+                    _w = 1;
+                } else {
+                    _t = (_t & 0b1111111100000000) | value;
+                    _v = _t;
+                    _w = 0;
+                }
                 break;
             case 0x07: // PPU data read/write
-                _mem[_ppu_addr] = value;
+                _mem[_v] = value;
                 /// Nametables range - Mirroring
-                if(_ppu_addr >= 0x2000 && _ppu_addr <= 0x2EFF) {
+                if(_v >= 0x2000 && _v <= 0x2EFF) {
                     if(cartridge->get_mirroring() == Cartridge::Horizontal) {
-                        if(_ppu_addr < 0x2400 || (_ppu_addr >= 0x2800 && _ppu_addr < 0x2C00))
-                            _mem[_ppu_addr + 0x400] = value;
+                        if(_v < 0x2400 || (_v >= 0x2800 && _v < 0x2C00))
+                            _mem[_v + 0x400] = value;
                         else
-                            _mem[_ppu_addr - 0x400] = value;
+                            _mem[_v - 0x400] = value;
                     } else if(cartridge->get_mirroring() == Cartridge::Vertical) {
-                        if(_ppu_addr < 0x2800)
-                            _mem[_ppu_addr + 0x800] = value;
+                        if(_v < 0x2800)
+                            _mem[_v + 0x800] = value;
                         else
-                            _mem[_ppu_addr - 0x800] = value;
+                            _mem[_v - 0x800] = value;
                     }
                 }
 
                 // 0x3000 - 0x3EFF Mirrors 0x2000 - 0x2EFF
-                if(_ppu_addr >= 0x3000 && _ppu_addr <= 0x3EFF)
-                    _mem[_ppu_addr - 0x1000] = value;
+                if(_v >= 0x3000 && _v <= 0x3EFF)
+                    _mem[_v - 0x1000] = value;
 
                 // Palettes
-                if(_ppu_addr >= 0x3F00) {
+                if(_v >= 0x3F00) {
                     // 0x3F20 - 0x3FFF Mirrors 0x3F00 - 0x3F1F
-                    auto addr = (_ppu_addr & 0x1f) + 0x3F00;
+                    auto addr = (_v & 0x1f) + 0x3F00;
                     _mem[addr] = value;
 
                     // Palette Mirroring, double the write to simplify the reads
@@ -162,7 +171,7 @@ class PPU {
                             _mem[addr - 0x10] = value;
                 }
 
-                _ppu_addr += (_ppu_control & VerticalWrite) ? 32 : 1;
+                _v += (_ppu_control & VerticalWrite) ? 32 : 1;
                 // std::cout << "PPU Write: " << Hexa(_ppu_addr) << " = " << Hexa8(value) << std::endl;
                 break;
             default: std::cerr << "Write on unsupported PPU address: " << Hexa(addr) << std::endl; break;
@@ -214,8 +223,8 @@ class PPU {
     inline word_t get_mask_reg() const { return _ppu_mask; }
     inline word_t get_status_reg() const { return _ppu_status; }
     inline word_t get_oam_addr_reg() const { return _oam_addr; }
-    inline word_t get_scroll_x() const { return _scroll_x; }
-    inline word_t get_scroll_y() const { return _scroll_y; }
+    inline word_t get_scroll_x() const { return _x; }
+    inline word_t get_scroll_y() const { return (_v >> 12) & 7; }
 
     inline color_t get_color(word_t palette_idx, word_t color_idx) const {
         if(color_idx == 0) {
@@ -236,17 +245,28 @@ class PPU {
     word_t _ppu_mask = 0;    // $2001
     word_t _ppu_status = 0;  // $2002
     word_t _oam_addr = 0;    // $2003
-    word_t _scroll_x = 0;    // Access by $2005
-    word_t _scroll_y = 0;    // Access by $2005
 
     bool _nmi = false; // Non-Maskable Interrupt
 
-    addr_t _ppu_addr = 0; // Access by $2006
-
-    bool _scroll_ppu_addr_first_access = true; // Shared by _ppu_addr and _scroll_x/_scroll_y access
+    // Registers (NESDev nomenclature)
+    addr_t _v = 0; // Access by $2006
+    addr_t _t = 0;
+    word_t _x = 0;
+    bool   _w = 0;
 
     word_t* _mem = nullptr; // Access by $2007
     word_t* _oam = nullptr; // Access by $2004
 
     color_t* _screen;
+
+    void step();
+    void background_step();
+    void draw_line_sprites(); // Not cycle accurate
+
+    inline word_t mem_read(addr_t addr) {
+        if(addr < 0x2000) // CHR ROM (Or re-routed by cartridge)
+            return cartridge->read_chr(addr);
+        else
+            return _mem[addr];
+    }
 };
