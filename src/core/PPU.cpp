@@ -100,7 +100,9 @@ void PPU::background_step() {
     static word_t attribute;
     static word_t tile_data0 = 0, tile_data1 = 0;
 
-    auto bg_tile_pixel = (_cycles - 1 + _x) & 7;
+    auto coarse_x = (_v & 0x1f) * 8;
+
+    auto bg_tile_pixel = (_cycles - 1 + coarse_x + _x) & 7;
     if(_cycles == 1 || bg_tile_pixel == 0) {
         auto   fine_y = (_v >> 12) & 7;
         addr_t tile_addr = 0x2000 | (_v & 0x0FFF);
@@ -112,14 +114,10 @@ void PPU::background_step() {
         tile_translation(tile_l, tile_h, tile_data0, tile_data1);
         attribute = mem_read(attribute_addr);
 
-        bool top = ((fine_y + _line) % 32) < 16;
-        bool left = ((_cycles - 1 + _x) % 32) < 16; // Each byte contains the palette index for 4 blocks of 2x2 tiles
-        if(top && !left)
-            attribute = attribute >> 2;
-        else if(!top && left)
-            attribute = attribute >> 4;
-        else if(!top && !left)
-            attribute = attribute >> 6;
+        bool top = ((((_v >> 5) & 0x1f) * 8 + fine_y) % 32) < 16;
+        bool left = ((coarse_x + _x) % 32) < 16; // Each byte contains the palette index for 4 blocks of 2x2 tiles
+        auto shift = (top ? 0 : 4) + (left ? 0 : 2);
+        attribute = attribute >> shift;
         attribute &= 3;
 
         if((_v & 0x001F) == 31) { // if coarse X == 31
@@ -134,7 +132,7 @@ void PPU::background_step() {
     word_t color = ((bg_tile_pixel > 3 ? tile_data1 : tile_data0) >> shift) & 0b11;
     if(color > 0) {
         background_transparency[_cycles - 1] = false;
-        word_t val = _mem[0x3F01 + 4 * attribute + (color - 1)];
+        word_t val = mem_read(0x3F01 + 4 * attribute + (color - 1));
         _screen[_line * ScreenWidth + _cycles - 1] = rgb_palette[val & 0x3F];
     } else {
         background_transparency[_cycles - 1] = true;
@@ -143,8 +141,12 @@ void PPU::background_step() {
 }
 
 void PPU::step() {
-    if(_line < ScreenHeight && (_ppu_mask & BackgroundMask)) {
-        if(_cycles > 0 && _cycles <= ScreenWidth) {
+    const auto bg_enabled = (_ppu_mask & BackgroundMask);
+    const auto sprites_enabled = (_ppu_mask & SpriteMask);
+    const auto rendering_enabled = bg_enabled || sprites_enabled;
+
+    if(rendering_enabled && _line < ScreenHeight) {
+        if(bg_enabled && _cycles > 0 && _cycles <= ScreenWidth) {
             background_step();
         }
 
@@ -153,7 +155,7 @@ void PPU::step() {
                 _v += 0x1000;                   // increment fine Y
             else {                              //
                 _v &= ~0x7000;                  // fine Y = 0
-                int y = (_v & 0x03E0) >> 5;     // let y = coarse Y
+                addr_t y = (_v & 0x03E0) >> 5;  // let y = coarse Y
                 if(y == 29) {                   //
                     y = 0;                      // coarse Y = 0
                     _v ^= 0x0800;               // switch vertical nametable
@@ -168,10 +170,10 @@ void PPU::step() {
         }
     }
 
-    if(_line < ScreenHeight && _cycles == 257)
-        draw_line_sprites(); // Quick Hack
+    if(sprites_enabled && _line < ScreenHeight && _cycles == 257)
+        draw_line_sprites(); // FIXME: Quick Hack, sprites are still rendered line by line.
 
-    if((_ppu_mask & BackgroundMask) && _line == 261 && _cycles >= 280 && _cycles <= 304)
+    if(rendering_enabled && _line == 261 && (_cycles >= 280 && _cycles <= 304))
         _v = (_v & 0b000010000011111) | (_t & 0b111101111100000);
 
     ++_cycles;
